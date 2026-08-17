@@ -112,7 +112,7 @@ async function captureVisionScreenshot(
       fullPage: false,
       type: "jpeg",
       quality,
-      timeout: 60_000,
+      timeout: 90_000,
     });
 
     if (screenshot.length <= maxBytes) {
@@ -124,7 +124,7 @@ async function captureVisionScreenshot(
     fullPage: false,
     type: "jpeg",
     quality: 35,
-    timeout: 60_000,
+    timeout: 90_000,
   });
 }
 
@@ -309,6 +309,36 @@ async function scrapeOnce(
     await page.waitForTimeout(options.headed ? 3000 : 2000);
     await dismissBlockingOverlays(page);
     await waitForSignInIfHeaded(page, options.headed ?? false);
+
+    if (!options.headed) {
+      await page.evaluate(() => {
+        const style = document.createElement("style");
+        style.textContent =
+          "*,*::before,*::after{animation-duration:0s!important;animation-delay:0s!important;transition-duration:0s!important;transition-delay:0s!important;}";
+        document.head.appendChild(style);
+
+        for (const el of document.querySelectorAll("*")) {
+          (el as HTMLElement).style.animationPlayState = "paused";
+        }
+
+        window.requestAnimationFrame = () => 0;
+        window.requestIdleCallback = (cb: TimerHandler) => setTimeout(cb, 0);
+        window.cancelAnimationFrame = () => {};
+        window.cancelIdleCallback = () => {};
+
+        for (const obj of [window, document, document.body, document.documentElement]) {
+          if (obj) {
+            for (const key of Object.getOwnPropertyNames(obj)) {
+              if (typeof key === "string" && key.startsWith("on") && key.length > 2) {
+                try {
+                  (obj as unknown as Record<string, unknown>)[key] = null;
+                } catch {}
+              }
+            }
+          }
+        }
+      });
+    }
 
     const screenshot = await captureVisionScreenshot(page);
     const visionResult = await extractWithVision(
