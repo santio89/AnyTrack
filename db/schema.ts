@@ -7,7 +7,6 @@ import {
   serial,
   text,
   timestamp,
-  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
@@ -56,26 +55,6 @@ export const logs = pgTable("logs", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
-export const siteSessions = pgTable(
-  "site_sessions",
-  {
-    id: serial("id").primaryKey(),
-    userId: integer("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    domain: text("domain").notNull(),
-    storageState: text("storage_state").notNull(),
-    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
-  },
-  (table) => ({
-    userDomainIdx: uniqueIndex("site_sessions_user_domain_idx").on(
-      table.userId,
-      table.domain,
-    ),
-  }),
-);
-
 export const usersRelations = relations(users, ({ many }) => ({
   trackers: many(trackers),
 }));
@@ -100,4 +79,3 @@ export type Tracker = typeof trackers.$inferSelect;
 export type NewTracker = typeof trackers.$inferInsert;
 export type Log = typeof logs.$inferSelect;
 export type NewLog = typeof logs.$inferInsert;
-export type SiteSession = typeof siteSessions.$inferSelect;

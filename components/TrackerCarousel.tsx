@@ -29,10 +29,10 @@ type TrackerCarouselProps = {
   trackers: TrackerRecord[];
   getTrackerRunningState: (
     trackerId: string,
-  ) => { id: string; headed: boolean } | null;
+  ) => { id: string } | null;
   onReorder: (newOrder: TrackerRecord[]) => void;
   onToggle: (tracker: TrackerRecord) => void;
-  onRun: (tracker: TrackerRecord, headed?: boolean) => void;
+  onRun: (tracker: TrackerRecord) => void;
   onEdit: (tracker: TrackerRecord) => void;
   onDelete: (tracker: TrackerRecord) => void;
 };

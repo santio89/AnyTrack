@@ -2,21 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   formatScrapeErrorMessage,
   suggestsBlockedAccess,
-  suggestsVisibleBrowser,
 } from "@/lib/scrape-hints";
 import { buildChangeSummary, formatNumericChange } from "@/lib/value-change";
 import { buildFallbackSuggestions, parseSuggestions } from "@/lib/suggest-targets";
 
 describe("scrape hints", () => {
-  it("adds visible browser guidance for login errors", () => {
-    const message = formatScrapeErrorMessage(
-      'Could not extract "price" because signing in is required to view that content.',
-    );
-
-    expect(message).toContain("visible browser");
-    expect(suggestsVisibleBrowser(message)).toBe(true);
-  });
-
   it("adds blocked access guidance", () => {
     const message = formatScrapeErrorMessage(
       "The site blocked the automated request or showed a captcha.",

@@ -10,7 +10,6 @@ import type { LogRecord } from "@/types/tracker";
 
 export type RunningTrackerState = {
   id: string;
-  headed: boolean;
   startedAt: number;
 };
 
@@ -70,13 +69,12 @@ export function useRunningTrackers({
     }
 
     const payload = (await response.json()) as {
-      running?: Array<{ trackerId: number; headed: boolean; startedAt: number }>;
+      running?: Array<{ trackerId: number; startedAt: number }>;
     };
 
     setServerRunning(
       (payload.running ?? []).map((entry) => ({
         id: String(entry.trackerId),
-        headed: entry.headed,
         startedAt: entry.startedAt,
       })),
     );
@@ -106,7 +104,6 @@ export function useRunningTrackers({
 
       stillPending.push({
         id: run.trackerId,
-        headed: run.headed,
         startedAt: run.startedAt,
       });
     }
@@ -153,14 +150,13 @@ export function useRunningTrackers({
     return () => window.clearInterval(interval);
   }, [isLoaded, onPoll, runningTrackers.length]);
 
-  const markRunning = useCallback((trackerId: string, headed: boolean) => {
+  const markRunning = useCallback((trackerId: string) => {
     setLocalRunning((current) => {
       const existing = current.find((entry) => entry.id === trackerId);
 
       return mergeRunning(current, [
         {
           id: trackerId,
-          headed,
           startedAt: existing?.startedAt ?? Date.now(),
         },
       ]);

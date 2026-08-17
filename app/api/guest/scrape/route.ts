@@ -12,7 +12,6 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       url?: string;
       targetDescription?: string;
-      headed?: boolean;
       referenceImage?: {
         data: string;
         mimeType?: string;
@@ -43,7 +42,6 @@ export async function POST(request: Request) {
     }
 
     const result = await scrapeTarget(url, targetDescription, {
-      headed: body.headed === true,
       referenceImage: referenceImage ?? null,
       userAi: parseGuestAiSettingsBody(body.aiSettings),
     });

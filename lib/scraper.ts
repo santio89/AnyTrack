@@ -1,16 +1,10 @@
 import { createChatCompletion, encodeLogModel, VISION_MODEL } from "@/lib/ai";
 import type { UserAiSettings } from "@/types/ai-settings";
-import {
-  getDomainFromUrl,
-  getStorageStateForUrl,
-  saveSession,
-} from "@/lib/sessions";
 import { loadReferenceImage } from "@/lib/reference-images";
 import { dismissBlockingOverlays } from "@/lib/scrape-overlays";
 import { stripUrlParams } from "@/lib/utils";
 import {
   buildExtractionFailureMessage,
-  isLikelyLoginWall,
   normalizeFailureReason,
   parseVisionResponse,
 } from "@/lib/vision-response";
@@ -35,26 +29,10 @@ export class ScrapeError extends Error {
 }
 
 let browserInstance: Browser | null = null;
-let browserHeadless: boolean | null = null;
 
-type BrowserResult = { browser: Browser; actualHeadless: boolean };
-
-async function getBrowser(headed = false): Promise<BrowserResult> {
-  let headless = !headed;
-
-  if (headed && !process.env.DISPLAY && process.platform === "linux") {
-    console.warn(
-      "[AnyTrack] Headed mode requested but no DISPLAY available — falling back to headless",
-    );
-    headless = true;
-  }
-
-  if (
-    browserInstance &&
-    browserInstance.isConnected() &&
-    browserHeadless === headless
-  ) {
-    return { browser: browserInstance, actualHeadless: headless };
+async function getBrowser(): Promise<Browser> {
+  if (browserInstance && browserInstance.isConnected()) {
+    return browserInstance;
   }
 
   if (browserInstance) {
@@ -63,7 +41,7 @@ async function getBrowser(headed = false): Promise<BrowserResult> {
   }
 
   const launchOptions = {
-    headless,
+    headless: true,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -82,33 +60,9 @@ async function getBrowser(headed = false): Promise<BrowserResult> {
     browserInstance = await chromium.launch(launchOptions);
   }
 
-  browserHeadless = headless;
-  return { browser: browserInstance, actualHeadless: headless };
+  return browserInstance;
 }
 
-
-async function isLoginWall(page: import("playwright").Page): Promise<boolean> {
-  const bodyText = await page.locator("body").innerText();
-  return isLikelyLoginWall(bodyText);
-}
-
-async function waitForSignInIfHeaded(
-  page: import("playwright").Page,
-  headed: boolean,
-) {
-  if (!headed || !(await isLoginWall(page))) {
-    return;
-  }
-
-  const deadline = Date.now() + 90_000;
-
-  while (Date.now() < deadline) {
-    await page.waitForTimeout(2000);
-    if (!(await isLoginWall(page))) {
-      return;
-    }
-  }
-}
 
 async function captureVisionScreenshot(
   page: import("playwright").Page,
@@ -199,11 +153,9 @@ Rules:
 }
 
 export type ScrapeOptions = {
-  headed?: boolean;
   referenceImagePath?: string | null;
   referenceImage?: { buffer: Buffer; mimeType: string } | null;
   userAi?: UserAiSettings | null;
-  sessionUserId?: number | null;
 };
 
 async function extractWithVision(
@@ -310,10 +262,7 @@ async function scrapeOnceInner(
   targetDescription: string,
   options: ScrapeOptions = {},
 ): Promise<ScrapeResult> {
-  const { browser, actualHeadless } = await getBrowser(options.headed ?? false);
-  const isHeaded = !actualHeadless;
-  const domain = getDomainFromUrl(url);
-  const storageState = await getStorageStateForUrl(url, options.sessionUserId);
+  const browser = await getBrowser();
 
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
@@ -324,7 +273,6 @@ async function scrapeOnceInner(
     extraHTTPHeaders: {
       "Accept-Language": "es-AR,es;q=0.9,en;q=0.8",
     },
-    ...(storageState ? { storageState } : {}),
   });
 
   await context.addInitScript(() => {
@@ -344,39 +292,36 @@ async function scrapeOnceInner(
       .catch(() => undefined);
 
     await dismissBlockingOverlays(page);
-    await page.waitForTimeout(isHeaded ? 3000 : 2000);
+    await page.waitForTimeout(2000);
     await dismissBlockingOverlays(page);
-    await waitForSignInIfHeaded(page, isHeaded);
 
-    if (!isHeaded) {
-      await page.evaluate(() => {
-        const style = document.createElement("style");
-        style.textContent =
-          "*,*::before,*::after{animation-duration:0s!important;animation-delay:0s!important;transition-duration:0s!important;transition-delay:0s!important;}";
-        document.head.appendChild(style);
+    await page.evaluate(() => {
+      const style = document.createElement("style");
+      style.textContent =
+        "*,*::before,*::after{animation-duration:0s!important;animation-delay:0s!important;transition-duration:0s!important;transition-delay:0s!important;}";
+      document.head.appendChild(style);
 
-        for (const el of document.querySelectorAll("*")) {
-          (el as HTMLElement).style.animationPlayState = "paused";
-        }
+      for (const el of document.querySelectorAll("*")) {
+        (el as HTMLElement).style.animationPlayState = "paused";
+      }
 
-        window.requestAnimationFrame = () => 0;
-        window.requestIdleCallback = (cb: TimerHandler) => setTimeout(cb, 0);
-        window.cancelAnimationFrame = () => {};
-        window.cancelIdleCallback = () => {};
+      window.requestAnimationFrame = () => 0;
+      window.requestIdleCallback = (cb: TimerHandler) => setTimeout(cb, 0);
+      window.cancelAnimationFrame = () => {};
+      window.cancelIdleCallback = () => {};
 
-        for (const obj of [window, document, document.body, document.documentElement]) {
-          if (obj) {
-            for (const key of Object.getOwnPropertyNames(obj)) {
-              if (typeof key === "string" && key.startsWith("on") && key.length > 2) {
-                try {
-                  (obj as unknown as Record<string, unknown>)[key] = null;
-                } catch {}
-              }
+      for (const obj of [window, document, document.body, document.documentElement]) {
+        if (obj) {
+          for (const key of Object.getOwnPropertyNames(obj)) {
+            if (typeof key === "string" && key.startsWith("on") && key.length > 2) {
+              try {
+                (obj as unknown as Record<string, unknown>)[key] = null;
+              } catch {}
             }
           }
         }
-      });
-    }
+      }
+    });
 
     const screenshot = await captureVisionScreenshot(page);
     const visionResult = await extractWithVision(
@@ -385,18 +330,6 @@ async function scrapeOnceInner(
       screenshot,
       options,
     );
-
-    if (options.sessionUserId != null) {
-      try {
-        await saveSession(
-          options.sessionUserId,
-          domain,
-          await context.storageState(),
-        );
-      } catch (error) {
-        console.warn("[AnyTrack] Could not save session:", error);
-      }
-    }
 
     return {
       ...visionResult,
@@ -433,6 +366,5 @@ export async function closeBrowser() {
   if (browserInstance) {
     await browserInstance.close();
     browserInstance = null;
-    browserHeadless = null;
   }
 }

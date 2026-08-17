@@ -113,7 +113,7 @@ export const en = {
       targetUrl: "Target URL",
       urlPlaceholder: "https://example.com/pricing",
       whatToExtract: "What to extract",
-      extractPlaceholder: "e.g. El precio actual del producto",
+      extractPlaceholder: "e.g. The current product price",
       aiSuggest: "AI suggest",
       checkFrequency: "Check frequency",
       guestFrequency:

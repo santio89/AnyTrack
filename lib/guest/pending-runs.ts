@@ -1,6 +1,5 @@
 export type GuestPendingRun = {
   trackerId: string;
-  headed: boolean;
   startedAt: number;
 };
 

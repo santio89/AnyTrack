@@ -6,7 +6,6 @@ import {
   ExternalLink,
   GripVertical,
   Loader2,
-  Monitor,
   Pause,
   Pencil,
   Play,
@@ -34,9 +33,9 @@ import { cn } from "@/lib/utils";
 
 type TrackerCardProps = {
   tracker: TrackerRecord;
-  runningState: { id: string; headed: boolean } | null;
+  runningState: { id: string } | null;
   onToggle: (tracker: TrackerRecord) => void;
-  onRun: (tracker: TrackerRecord, headed?: boolean) => void;
+  onRun: (tracker: TrackerRecord) => void;
   onEdit: (tracker: TrackerRecord) => void;
   onDelete: (tracker: TrackerRecord) => void;
 };
@@ -178,11 +177,11 @@ export function TrackerCard({
                   variant="outline"
                   size="icon"
                   className="swiper-no-swiping h-8 w-full"
-                  onClick={() => onRun(tracker, false)}
+                  onClick={() => onRun(tracker)}
                   disabled={runningState !== null}
                   aria-label={t("dashboard.trackers.runNow")}
                 >
-                  {runningState && !runningState.headed ? (
+                  {runningState ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
                     <RefreshCw className="h-3.5 w-3.5" />
@@ -190,27 +189,6 @@ export function TrackerCard({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{t("dashboard.trackers.runNow")}</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="swiper-no-swiping h-8 w-full"
-                  onClick={() => onRun(tracker, true)}
-                  disabled={runningState !== null}
-                  aria-label={t("dashboard.trackers.runVisibleBrowser")}
-                >
-                  {runningState && runningState.headed ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Monitor className="h-3.5 w-3.5" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {t("dashboard.trackers.runVisibleBrowser")}
-              </TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>

@@ -395,18 +395,15 @@ export function Dashboard() {
     }
   }
 
-  async function handleRunTracker(tracker: TrackerRecord, headed = false) {
-    markRunning(tracker.id, headed);
+  async function handleRunTracker(tracker: TrackerRecord) {
+    markRunning(tracker.id);
     let keepRunning = false;
 
     try {
-      const result = await runTracker(tracker, headed);
+      const result = await runTracker(tracker);
 
       if (result.ok) {
-        toast(
-          headed ? t("toast.visibleScrapeFinished") : t("toast.scrapeFinished"),
-          "success",
-        );
+        toast(t("toast.scrapeFinished"), "success");
       } else if ("alreadyRunning" in result && result.alreadyRunning) {
         keepRunning = true;
         await syncRunningState();
@@ -796,7 +793,7 @@ export function Dashboard() {
               getTrackerRunningState={getTrackerRunningState}
               onReorder={handleReorder}
               onToggle={(item) => void handleToggleTracker(item)}
-              onRun={(tracker, headed) => void handleRunTracker(tracker, headed)}
+              onRun={(tracker) => void handleRunTracker(tracker)}
               onEdit={openEditTracker}
               onDelete={(tracker) => {
                 setDeleteClearLogs(true);

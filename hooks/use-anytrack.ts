@@ -434,11 +434,10 @@ export function useAnyTrack(logTrackerFilter: string) {
   );
 
   const runTracker = useCallback(
-    async (tracker: TrackerRecord, headed = false) => {
+    async (tracker: TrackerRecord) => {
       if (tracker.mode === "guest") {
         addGuestPendingRun({
           trackerId: tracker.id,
-          headed,
           startedAt: Date.now(),
         });
 
@@ -449,7 +448,6 @@ export function useAnyTrack(logTrackerFilter: string) {
           body: JSON.stringify({
             url: tracker.url,
             targetDescription: tracker.targetDescription,
-            headed,
             referenceImage: tracker.referenceImage ?? undefined,
             aiSettings:
               guestAi.provider && guestAi.apiKey
@@ -495,7 +493,6 @@ export function useAnyTrack(logTrackerFilter: string) {
       const response = await fetch(`/api/trackers/${tracker.dbId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ headed }),
       });
 
       if (response.status === 409) {

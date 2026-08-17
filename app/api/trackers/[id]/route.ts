@@ -244,11 +244,9 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Invalid tracker ID" }, { status: 400 });
     }
 
-    const body = (await request.json().catch(() => ({}))) as {
-      headed?: boolean;
-    };
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
 
-    await runTrackerNow(trackerId, userId, { headed: body.headed === true });
+    await runTrackerNow(trackerId, userId);
 
     return NextResponse.json({ success: true, message: "Tracker scrape triggered" });
   } catch (error) {

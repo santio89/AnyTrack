@@ -13,15 +13,11 @@ let workerStarted = false;
 
 type RunningTrackerMeta = {
   userId: number;
-  headed: boolean;
   startedAt: number;
 };
 
 const runningTrackers = new Map<number, RunningTrackerMeta>();
 
-type ProcessTrackerOptions = {
-  headed?: boolean;
-};
 
 async function getPreviousExtractedValue(trackerId: number) {
   const [previousLog] = await db
@@ -99,7 +95,6 @@ async function maybeNotifyValueChange(
 
 async function processTracker(
   tracker: typeof trackers.$inferSelect,
-  options: ProcessTrackerOptions = {},
 ) {
   if (runningTrackers.has(tracker.id)) {
     return;
@@ -111,7 +106,6 @@ async function processTracker(
 
   runningTrackers.set(tracker.id, {
     userId: tracker.userId,
-    headed: options.headed ?? false,
     startedAt: Date.now(),
   });
 
@@ -131,10 +125,8 @@ async function processTracker(
 
     const result = await Promise.race([
       scrapeTarget(tracker.url, tracker.targetDescription, {
-        headed: options.headed,
         referenceImagePath,
         userAi,
-        sessionUserId: tracker.userId,
       }),
       new Promise<never>((_, reject) =>
         setTimeout(
@@ -239,7 +231,6 @@ export function getRunningTrackersForUser(userId: number) {
     .filter(([, meta]) => meta.userId === userId)
     .map(([trackerId, meta]) => ({
       trackerId,
-      headed: meta.headed,
       startedAt: meta.startedAt,
     }));
 }
@@ -247,7 +238,6 @@ export function getRunningTrackersForUser(userId: number) {
 export async function runTrackerNow(
   trackerId: number,
   userId: number,
-  options: ProcessTrackerOptions = {},
 ) {
   if (runningTrackers.has(trackerId)) {
     throw new Error("Tracker is already running");
@@ -269,7 +259,7 @@ export async function runTrackerNow(
     throw new Error("Tracker not found");
   }
 
-  await processTracker(tracker, options);
+  await processTracker(tracker);
 }
 
 export async function clearLogs(userId: number, trackerId?: number) {

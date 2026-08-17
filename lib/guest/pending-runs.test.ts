@@ -40,7 +40,6 @@ describe("guest pending runs", () => {
 
     addGuestPendingRun({
       trackerId,
-      headed: false,
       startedAt: Date.now(),
     });
 
@@ -54,7 +53,6 @@ describe("guest pending runs", () => {
   it("drops expired pending runs", () => {
     addGuestPendingRun({
       trackerId: "guest-tracker-old",
-      headed: true,
       startedAt: Date.now() - 11 * 60 * 1000,
     });
 
