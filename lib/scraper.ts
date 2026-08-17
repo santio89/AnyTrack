@@ -37,15 +37,24 @@ export class ScrapeError extends Error {
 let browserInstance: Browser | null = null;
 let browserHeadless: boolean | null = null;
 
-async function getBrowser(headed = false): Promise<Browser> {
-  const headless = !headed;
+type BrowserResult = { browser: Browser; actualHeadless: boolean };
+
+async function getBrowser(headed = false): Promise<BrowserResult> {
+  let headless = !headed;
+
+  if (headed && !process.env.DISPLAY && process.platform === "linux") {
+    console.warn(
+      "[AnyTrack] Headed mode requested but no DISPLAY available — falling back to headless",
+    );
+    headless = true;
+  }
 
   if (
     browserInstance &&
     browserInstance.isConnected() &&
     browserHeadless === headless
   ) {
-    return browserInstance;
+    return { browser: browserInstance, actualHeadless: headless };
   }
 
   if (browserInstance) {
@@ -74,7 +83,7 @@ async function getBrowser(headed = false): Promise<Browser> {
   }
 
   browserHeadless = headless;
-  return browserInstance;
+  return { browser: browserInstance, actualHeadless: headless };
 }
 
 
@@ -285,7 +294,8 @@ async function scrapeOnce(
   targetDescription: string,
   options: ScrapeOptions = {},
 ): Promise<ScrapeResult> {
-  const browser = await getBrowser(options.headed ?? false);
+  const { browser, actualHeadless } = await getBrowser(options.headed ?? false);
+  const isHeaded = !actualHeadless;
   const domain = getDomainFromUrl(url);
   const storageState = await getStorageStateForUrl(url, options.sessionUserId);
 
@@ -318,11 +328,11 @@ async function scrapeOnce(
       .catch(() => undefined);
 
     await dismissBlockingOverlays(page);
-    await page.waitForTimeout(options.headed ? 3000 : 2000);
+    await page.waitForTimeout(isHeaded ? 3000 : 2000);
     await dismissBlockingOverlays(page);
-    await waitForSignInIfHeaded(page, options.headed ?? false);
+    await waitForSignInIfHeaded(page, isHeaded);
 
-    if (!options.headed) {
+    if (!isHeaded) {
       await page.evaluate(() => {
         const style = document.createElement("style");
         style.textContent =
@@ -365,7 +375,7 @@ async function scrapeOnce(
       screenshot,
     };
   } finally {
-    if (options.headed && options.sessionUserId != null) {
+    if (isHeaded && options.sessionUserId != null) {
       try {
         await saveSession(
           options.sessionUserId,
