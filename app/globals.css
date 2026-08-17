@@ -1,0 +1,428 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+  --primary: 262.1 83.3% 57.8%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 4.8% 95.9%;
+  --secondary-foreground: 240 5.9% 10%;
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+  --accent: 262.1 60% 96%;
+  --accent-foreground: 262.1 83.3% 40%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 262.1 83.3% 57.8%;
+  --radius: 0.5rem;
+  color-scheme: light;
+}
+
+.dark {
+  --background: 260 12% 3.5%;
+  --foreground: 0 0% 98%;
+  --card: 260 8% 5.5%;
+  --card-foreground: 0 0% 98%;
+  --popover: 260 8% 5.5%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 263 70% 65%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 260 6% 12%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 260 6% 12%;
+  --muted-foreground: 260 5% 64.9%;
+  --accent: 263 35% 14%;
+  --accent-foreground: 263 70% 82%;
+  --destructive: 0 62.8% 50%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 260 5% 14%;
+  --input: 260 5% 14%;
+  --ring: 263 70% 65%;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: hsl(var(--primary) / 0.35);
+  color: hsl(var(--foreground));
+}
+
+html.disable-transitions,
+html.disable-transitions *,
+html.disable-transitions *::before,
+html.disable-transitions *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes zoom-in-95 {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes zoom-out-95 {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes slide-in-from-top-2 {
+  from {
+    transform: translateY(-0.5rem);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-from-bottom-2 {
+  from {
+    transform: translateY(0.5rem);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-from-left-2 {
+  from {
+    transform: translateX(-0.5rem);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-from-right-2 {
+  from {
+    transform: translateX(0.5rem);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-in {
+  animation-duration: 200ms;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+
+.animate-out {
+  animation-duration: 150ms;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+
+.fade-in-0 {
+  animation-name: fade-in;
+}
+
+.fade-out-0 {
+  animation-name: fade-out;
+}
+
+.zoom-in-95 {
+  animation-name: zoom-in-95;
+}
+
+.zoom-out-95 {
+  animation-name: zoom-out-95;
+}
+
+.slide-in-from-top-2 {
+  animation-name: slide-in-from-top-2;
+}
+
+.slide-in-from-bottom-2 {
+  animation-name: slide-in-from-bottom-2;
+}
+
+.slide-in-from-left-2 {
+  animation-name: slide-in-from-left-2;
+}
+
+.slide-in-from-right-2 {
+  animation-name: slide-in-from-right-2;
+}
+
+.slide-in-from-left-1\/2 {
+  animation-name: slide-in-from-left-2;
+}
+
+.slide-in-from-top-\[48\%\] {
+  animation-name: slide-in-from-top-2;
+}
+
+.slide-out-to-left-1\/2 {
+  animation-name: slide-in-from-right-2;
+  animation-direction: reverse;
+}
+
+.slide-out-to-top-\[48\%\] {
+  animation-name: slide-in-from-bottom-2;
+  animation-direction: reverse;
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    scale: 0.98;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes dialog-out {
+  from {
+    opacity: 1;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+    scale: 0.98;
+  }
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes overlay-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.dialog-fade-in {
+  animation: dialog-in 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.dialog-fade-out {
+  animation: dialog-out 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.dialog-overlay-in {
+  animation: overlay-in 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.dialog-overlay-out {
+  animation: overlay-out 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog-fade-in,
+  .dialog-fade-out,
+  .dialog-overlay-in,
+  .dialog-overlay-out {
+    animation: none;
+  }
+}
+
+.tracker-swiper {
+  overflow: hidden;
+  margin-inline: -0.25rem;
+  padding-inline: 0.25rem;
+}
+
+.tracker-swiper-slide {
+  height: auto;
+  width: min(100%, 22rem);
+  max-width: 22rem;
+  min-width: 0;
+  cursor: default;
+}
+
+.glass-header {
+  background: linear-gradient(
+    135deg,
+    hsl(263 70% 65% / 0.08) 0%,
+    hsl(0 0% 100% / 0.06) 45%,
+    hsl(280 60% 60% / 0.06) 100%
+  );
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid hsl(0 0% 100% / 0.12);
+  box-shadow:
+    0 8px 32px -4px hsl(0 0% 0% / 0.45),
+    0 2px 8px -2px hsl(263 70% 65% / 0.15),
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.1);
+}
+
+:root:not(.dark) .glass-header {
+  background: linear-gradient(
+    135deg,
+    hsl(263 70% 65% / 0.06) 0%,
+    hsl(0 0% 100% / 0.72) 50%,
+    hsl(280 60% 60% / 0.04) 100%
+  );
+  border-color: hsl(0 0% 100% / 0.6);
+  box-shadow:
+    0 8px 32px -4px hsl(0 0% 0% / 0.12),
+    0 2px 8px -2px hsl(263 70% 65% / 0.08),
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.9);
+}
+
+/* Neo-futuristic surfaces */
+.neo-grid-bg {
+  background-image:
+    linear-gradient(hsl(var(--primary) / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--primary) / 0.06) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse at center, black 20%, transparent 72%);
+}
+
+.neo-gradient-text {
+  background: linear-gradient(
+    120deg,
+    hsl(var(--primary)) 0%,
+    hsl(280 85% 72%) 45%,
+    hsl(320 80% 68%) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.neo-glass-panel {
+  border-radius: calc(var(--radius) + 4px);
+  border: 1px solid hsl(var(--primary) / 0.22);
+  background: linear-gradient(
+    145deg,
+    hsl(var(--card) / 0.72) 0%,
+    hsl(var(--background) / 0.45) 100%
+  );
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  box-shadow:
+    0 24px 48px -20px hsl(0 0% 0% / 0.55),
+    0 0 0 1px hsl(var(--primary) / 0.06) inset,
+    0 1px 0 0 hsl(0 0% 100% / 0.06) inset;
+}
+
+.neo-cta-glow {
+  box-shadow:
+    0 0 0 1px hsl(var(--primary) / 0.35),
+    0 12px 32px -8px hsl(var(--primary) / 0.55);
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+
+.neo-cta-glow:hover {
+  box-shadow:
+    0 0 0 1px hsl(var(--primary) / 0.5),
+    0 16px 40px -6px hsl(var(--primary) / 0.65);
+  transform: translateY(-1px);
+}
+
+.neo-scanline {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    hsl(var(--primary) / 0.03) 2px,
+    hsl(var(--primary) / 0.03) 4px
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neo-cta-glow:hover {
+    transform: none;
+  }
+}
