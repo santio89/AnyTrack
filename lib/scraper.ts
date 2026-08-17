@@ -386,12 +386,7 @@ async function scrapeOnceInner(
       options,
     );
 
-    return {
-      ...visionResult,
-      screenshot,
-    };
-  } finally {
-    if (isHeaded && options.sessionUserId != null) {
+    if (options.sessionUserId != null) {
       try {
         await saveSession(
           options.sessionUserId,
@@ -399,10 +394,15 @@ async function scrapeOnceInner(
           await context.storageState(),
         );
       } catch (error) {
-        console.warn("[AnyTrack] Could not save session from visible browser run:", error);
+        console.warn("[AnyTrack] Could not save session:", error);
       }
     }
 
+    return {
+      ...visionResult,
+      screenshot,
+    };
+  } finally {
     await context.close();
   }
 }
