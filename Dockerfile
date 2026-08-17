@@ -2,7 +2,6 @@ FROM mcr.microsoft.com/playwright:v1.55.0-noble
 
 WORKDIR /app
 
-ENV NODE_ENV=production
 ENV DB_PATH=/var/data/sqlite.db
 ENV SCREENSHOTS_PATH=/var/data/screenshots
 ENV REFERENCE_IMAGES_PATH=/var/data/reference-images
@@ -14,7 +13,9 @@ COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts
 
 COPY . .
-RUN npm run build
+RUN npm run build && npm prune --omit=dev
+
+ENV NODE_ENV=production
 
 RUN mkdir -p /var/data /var/data/screenshots /var/data/reference-images
 
