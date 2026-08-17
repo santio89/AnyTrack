@@ -17,6 +17,8 @@ export const en = {
     label: "Language",
     english: "English",
     spanish: "Español",
+    switchToSpanish: "Switch to spanish language",
+    switchToEnglish: "Switch to english language",
   },
   theme: {
     toggle: "Toggle theme",

@@ -7,6 +7,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
   Bell,
+  LayoutDashboard,
   Radar,
   ScanEye,
   Sparkles,
@@ -16,7 +17,12 @@ import { LanguageToggle } from "@/components/LanguageToggle";
 import { useI18n } from "@/components/I18nProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Badge } from "@/components/ui/badge";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -247,6 +253,22 @@ export function LandingPage() {
           <TooltipProvider delayDuration={200}>
             <LanguageToggle variant="outline" className="h-9" />
             <ThemeToggle variant="outline" className="h-9 w-9" />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9"
+                  asChild
+                  aria-label={t("landing.openDashboard")}
+                >
+                  <Link href="/dashboard" prefetch>
+                    <LayoutDashboard className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t("landing.openDashboard")}</TooltipContent>
+            </Tooltip>
           </TooltipProvider>
         </div>
       </header>

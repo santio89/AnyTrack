@@ -19,6 +19,8 @@ export const es = {
     label: "Idioma",
     english: "English",
     spanish: "Español",
+    switchToSpanish: "Cambiar al idioma español",
+    switchToEnglish: "Cambiar al idioma inglés",
   },
   theme: {
     toggle: "Cambiar tema",

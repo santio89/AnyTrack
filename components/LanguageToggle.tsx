@@ -48,7 +48,9 @@ export function LanguageToggle({
         </Button>
       </TooltipTrigger>
       <TooltipContent>
-        {locale === "en" ? t("language.spanish") : t("language.english")}
+        {locale === "en"
+          ? t("language.switchToSpanish")
+          : t("language.switchToEnglish")}
       </TooltipContent>
     </Tooltip>
   );
