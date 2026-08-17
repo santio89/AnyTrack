@@ -455,6 +455,9 @@ export function Dashboard() {
             100,
         )
       : null;
+  const dataLoading = loading || authLoading;
+  const dash = t("common.dash");
+  const formatCount = (count: number) => (count === 0 ? dash : count);
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -472,7 +475,7 @@ export function Dashboard() {
       />
 
       <main className="relative mx-auto max-w-7xl space-y-8 px-6 py-8">
-        <GuestModeBanner isGuest={isGuest} />
+        <GuestModeBanner isGuest={isGuest && !dataLoading} />
         <SyncGuestDialog
           open={syncDialogOpen}
           syncing={syncing}
@@ -494,19 +497,19 @@ export function Dashboard() {
           {[
             {
               label: t("dashboard.stats.activeTrackers"),
-              value: activeCount,
+              value: formatCount(activeCount),
               icon: Activity,
               color: "text-primary",
             },
             {
               label: t("dashboard.stats.totalTrackers"),
-              value: trackers.length,
+              value: formatCount(trackers.length),
               icon: Radar,
               color: "text-primary/80",
             },
             {
               label: t("dashboard.stats.successRate"),
-              value: successRate != null ? `${successRate}%` : t("common.dash"),
+              value: successRate != null ? `${successRate}%` : dash,
               icon: RefreshCw,
               color: "text-primary/60",
             },
@@ -519,7 +522,9 @@ export function Dashboard() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">{stat.label}</p>
-                    <p className="text-2xl font-bold">{stat.value}</p>
+                    <p className="flex min-h-8 items-center text-2xl font-bold">
+                      {dataLoading ? dash : stat.value}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -705,7 +710,7 @@ export function Dashboard() {
             </Dialog>
           </div>
 
-          {loading || authLoading ? (
+          {dataLoading ? (
             <Card className="border-border/60 bg-card/50 backdrop-blur-sm">
               <CardContent className="flex items-center justify-center py-16">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -816,7 +821,7 @@ export function Dashboard() {
                 refreshing && "pointer-events-none opacity-60",
               )}
             >
-              {loading || authLoading ? (
+              {dataLoading ? (
                 <div className="flex items-center justify-center py-16">
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
