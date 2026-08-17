@@ -104,47 +104,40 @@ async function waitForSignInIfHeaded(
 async function captureVisionScreenshot(
   page: import("playwright").Page,
 ): Promise<Buffer> {
-  const qualities = [80, 60, 45];
   const maxBytes = 3.5 * 1024 * 1024;
+  const qualities = [80, 60, 45];
 
-  const takeScreenshot = async (quality: number): Promise<Buffer> => {
-    try {
-      return await page.screenshot({
-        fullPage: false,
-        type: "jpeg",
+  let cdp: import("playwright").CDPSession | null = null;
+
+  try {
+    cdp = await page.context().newCDPSession(page);
+
+    for (const quality of qualities) {
+      const { data } = await cdp.send("Page.captureScreenshot", {
+        format: "jpeg",
         quality,
-        timeout: 60_000,
+        captureBeyondViewport: false,
       });
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        /timeout/i.test(error.message) &&
-        quality === qualities[0]
-      ) {
-        return page.locator("html").screenshot({
-          type: "jpeg",
-          quality,
-          timeout: 60_000,
-        });
+
+      const buffer = Buffer.from(data, "base64");
+
+      if (buffer.length <= maxBytes) {
+        return buffer;
       }
-      throw error;
     }
-  };
 
-  for (const quality of qualities) {
-    const screenshot = await takeScreenshot(quality);
+    const { data } = await cdp.send("Page.captureScreenshot", {
+      format: "jpeg",
+      quality: 35,
+      captureBeyondViewport: false,
+    });
 
-    if (screenshot.length <= maxBytes) {
-      return screenshot;
+    return Buffer.from(data, "base64");
+  } finally {
+    if (cdp) {
+      await cdp.detach().catch(() => undefined);
     }
   }
-
-  return page.screenshot({
-    fullPage: false,
-    type: "jpeg",
-    quality: 35,
-    timeout: 60_000,
-  });
 }
 
 function buildVisionPrompt(
