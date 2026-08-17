@@ -12,6 +12,14 @@ Optional reference screenshots help the model find the right element. English an
 
 ## Run locally
 
+This repo pins **npm 11.16.0** (same as Docker/Render). One-time setup:
+
+```bash
+corepack enable
+```
+
+Then:
+
 ```bash
 cp .env.example .env
 npm install

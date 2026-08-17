@@ -4,8 +4,10 @@ WORKDIR /app
 
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
-COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts
+COPY package.json package-lock.json .npmrc ./
+RUN corepack enable \
+  && corepack prepare npm@11.16.0 --activate \
+  && npm ci --ignore-scripts
 
 COPY . .
 
