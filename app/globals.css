@@ -426,7 +426,7 @@ html.disable-transitions *::after {
 }
 
 .hero-logo-echo {
-  animation: hero-logo-echo-pulse 4.16s ease-out infinite;
+  animation: hero-logo-echo-pulse 4s ease-out infinite;
   transform-origin: center;
 }
 
