@@ -122,8 +122,7 @@ export function loadGuestLogs(trackerId?: string): LogRecord[] {
 
 export function hasGuestData() {
   const trackers = readJson<StoredGuestTracker[]>(TRACKERS_KEY, []);
-  const logs = readJson<StoredGuestLog[]>(LOGS_KEY, []);
-  return trackers.length > 0 || logs.length > 0;
+  return trackers.some((tracker) => !tracker.deletedAt);
 }
 
 export function clearGuestData() {

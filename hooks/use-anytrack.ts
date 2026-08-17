@@ -190,12 +190,16 @@ export function useAnyTrack(logTrackerFilter: string) {
     }
   }, [isLoaded, isSignedIn]);
 
-  if (isLoaded && isAuthenticated && !syncPromptChecked) {
+  useEffect(() => {
+    if (!isLoaded || !isAuthenticated || syncPromptChecked) {
+      return;
+    }
+
     setSyncPromptChecked(true);
     if (hasGuestData()) {
       setSyncDialogOpen(true);
     }
-  }
+  }, [isAuthenticated, isLoaded, syncPromptChecked]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -526,9 +530,14 @@ export function useAnyTrack(logTrackerFilter: string) {
   );
 
   const syncGuestTrackers = useCallback(async () => {
+    const payload = exportGuestTrackersForSync();
+    if (payload.length === 0) {
+      setSyncDialogOpen(false);
+      return { ok: true as const };
+    }
+
     setSyncing(true);
     try {
-      const payload = exportGuestTrackersForSync();
       const response = await fetch("/api/trackers/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
