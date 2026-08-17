@@ -421,7 +421,67 @@ html.disable-transitions *::after {
   );
 }
 
+.hero-logo-pulse {
+  isolation: isolate;
+}
+
+.hero-logo-echo {
+  animation: hero-logo-echo-pulse 4.16s ease-out infinite;
+  transform-origin: center;
+}
+
+.hero-logo-icon {
+  filter: drop-shadow(0 4px 12px hsl(var(--primary) / 0.22));
+}
+
+.dark .hero-logo-icon {
+  filter: drop-shadow(0 0 12px hsl(var(--primary) / 0.28));
+}
+
+@keyframes hero-logo-echo-pulse {
+  0% {
+    opacity: 0.22;
+    transform: scale(1);
+  }
+
+  40% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+
+.dark .hero-logo-echo {
+  animation-name: hero-logo-echo-pulse-dark;
+}
+
+@keyframes hero-logo-echo-pulse-dark {
+  0% {
+    opacity: 0.27;
+    transform: scale(1);
+  }
+
+  40% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .hero-logo-echo {
+    animation: none;
+    opacity: 0;
+  }
+
   .neo-cta-glow:hover {
     transform: none;
   }

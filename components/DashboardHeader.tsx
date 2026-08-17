@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { motion, useMotionValueEvent, useScroll } from "framer-motion";
-import { Plus, Radar, Settings } from "lucide-react";
+import { Plus, Settings } from "lucide-react";
+import { SiteLogo } from "@/components/SiteLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AuthButton } from "@/components/AuthButton";
 import { useI18n } from "@/components/I18nProvider";
@@ -68,9 +69,9 @@ export function DashboardHeader({
           href="/"
           className="relative z-10 flex min-w-0 flex-1 items-center gap-3 transition-opacity hover:opacity-90"
         >
-          <Radar
+          <SiteLogo
             className={cn(
-              "shrink-0 text-foreground transition-colors duration-500",
+              "transition-colors duration-500",
               scrolled ? "h-7 w-7" : "h-9 w-9",
             )}
           />

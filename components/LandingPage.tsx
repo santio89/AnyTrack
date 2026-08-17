@@ -8,12 +8,12 @@ import {
   ArrowRight,
   Bell,
   LayoutDashboard,
-  Radar,
   ScanEye,
   Sparkles,
   Timer,
 } from "lucide-react";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { SiteLogo } from "@/components/SiteLogo";
 import { useI18n } from "@/components/I18nProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Badge } from "@/components/ui/badge";
@@ -52,35 +52,36 @@ const heroItem = {
 };
 
 function RadarPulse({ reducedMotion }: { reducedMotion: boolean }) {
+  const loadBounce = {
+    initial: { scale: 0.82, y: 10, opacity: 0 },
+    animate: { scale: 1, y: 0, opacity: 1 },
+    transition: {
+      type: "spring" as const,
+      stiffness: 420,
+      damping: 14,
+      delay: 0.12,
+    },
+  };
+
   if (reducedMotion) {
     return (
-      <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10">
-        <Radar className="h-8 w-8 text-primary" />
+      <div className="relative flex h-16 w-16 items-center justify-center">
+        <SiteLogo className="hero-logo-icon relative z-10 h-16 w-16" />
       </div>
     );
   }
 
   return (
-    <div className="relative flex h-16 w-16 items-center justify-center">
-      <motion.span
-        className="absolute inset-0 rounded-2xl border border-primary/40"
-        animate={{ scale: [1, 1.35], opacity: [0.45, 0] }}
-        transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut" }}
+    <motion.div
+      {...loadBounce}
+      className="hero-logo-pulse relative flex h-16 w-16 items-center justify-center"
+    >
+      <SiteLogo
+        className="hero-logo-echo pointer-events-none absolute h-16 w-16"
+        aria-hidden
       />
-      <motion.span
-        className="absolute inset-0 rounded-2xl border border-violet-400/25"
-        animate={{ scale: [1, 1.55], opacity: [0.3, 0] }}
-        transition={{
-          duration: 2.4,
-          repeat: Infinity,
-          ease: "easeOut",
-          delay: 0.5,
-        }}
-      />
-      <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/35 bg-primary/10 shadow-[0_0_40px_-8px_hsl(var(--primary)/0.8)] backdrop-blur-sm">
-        <Radar className="h-8 w-8 text-primary" />
-      </div>
-    </div>
+      <SiteLogo className="hero-logo-icon relative z-10 h-16 w-16" />
+    </motion.div>
   );
 }
 
@@ -241,9 +242,7 @@ export function LandingPage() {
           href="/"
           className="group flex items-center gap-3 transition-opacity hover:opacity-90"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/30 bg-primary/10 shadow-[0_0_24px_-6px_hsl(var(--primary)/0.7)]">
-            <Radar className="h-5 w-5 text-primary" />
-          </div>
+          <SiteLogo className="h-10 w-10" />
           <div>
             <p className="text-base font-semibold tracking-tight">AnyTrack</p>
             <p className="text-xs text-muted-foreground">{t("landing.webMonitor")}</p>

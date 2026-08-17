@@ -8,7 +8,7 @@ export const size = {
 export const contentType = "image/png";
 
 export default function Icon() {
-  return new ImageResponse(<BrandMark size={32} />, {
+  return new ImageResponse(<BrandMark size={32} withBackground={false} />, {
     ...size,
   });
 }
