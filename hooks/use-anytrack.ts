@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useI18n } from "@/components/I18nProvider";
 import type { Tracker } from "@/db/schema";
@@ -66,8 +66,8 @@ export function useAnyTrack(logTrackerFilter: string) {
   const [savingAiSettings, setSavingAiSettings] = useState(false);
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
   const [syncPromptChecked, setSyncPromptChecked] = useState(false);
-  const [dataInitialized, setDataInitialized] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const previousSignedIn = useRef<boolean | undefined>(undefined);
 
   const fetchData = useCallback(
     async (showRefresh = false) => {
@@ -167,12 +167,28 @@ export function useAnyTrack(logTrackerFilter: string) {
     [isAuthenticated, isGuest, logTrackerFilter],
   );
 
-  if (isLoaded && !dataInitialized) {
-    setDataInitialized(true);
-    queueMicrotask(() => {
-      void fetchData();
-    });
-  }
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const authChanged =
+      previousSignedIn.current !== undefined &&
+      previousSignedIn.current !== isSignedIn;
+    previousSignedIn.current = isSignedIn;
+
+    if (authChanged) {
+      setLoading(true);
+      setTrackers([]);
+      setLogs([]);
+    }
+
+    void fetchData();
+  }, [fetchData, isLoaded, isSignedIn, logTrackerFilter]);
+
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      setSyncPromptChecked(false);
+    }
+  }, [isLoaded, isSignedIn]);
 
   if (isLoaded && isAuthenticated && !syncPromptChecked) {
     setSyncPromptChecked(true);

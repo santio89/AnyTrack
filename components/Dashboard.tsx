@@ -816,7 +816,11 @@ export function Dashboard() {
                 refreshing && "pointer-events-none opacity-60",
               )}
             >
-              {logs.length === 0 ? (
+              {loading || authLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : logs.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">
                   {logTrackerFilter === "all"
                     ? t("dashboard.logs.emptyAll")

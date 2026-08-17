@@ -29,7 +29,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} min-h-full antialiased`}
       >
-        <ClerkProvider>
+        <ClerkProvider afterSignOutUrl="/dashboard">
           <I18nProvider>
             <ThemeProvider defaultTheme="dark">
               <ToastProvider>{children}</ToastProvider>
