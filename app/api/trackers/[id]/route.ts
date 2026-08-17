@@ -12,7 +12,7 @@ import {
   parseReferenceImagePaths,
   saveReferenceImage,
 } from "@/lib/reference-images";
-import { runTrackerNow, abortTrackerRun } from "@/lib/worker";
+import { runTrackerNow } from "@/lib/worker";
 import { deleteTrackerScreenshots } from "@/lib/screenshots";
 import { validatePublicHttpUrl } from "@/lib/http-url";
 
@@ -145,10 +145,6 @@ export async function PATCH(request: Request, context: RouteContext) {
       })
       .where(and(eq(trackers.id, trackerId), eq(trackers.userId, userId)))
       .returning();
-
-    if (body.isActive === false) {
-      abortTrackerRun(trackerId);
-    }
 
     return NextResponse.json(updated);
   } catch (error) {

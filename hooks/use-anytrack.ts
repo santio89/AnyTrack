@@ -397,7 +397,6 @@ export function useAnyTrack(logTrackerFilter: string) {
         };
       }
 
-      await fetchData();
       return { ok: true as const };
     },
     [fetchData],

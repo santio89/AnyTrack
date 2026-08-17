@@ -204,7 +204,6 @@ export type ScrapeOptions = {
   referenceImage?: { buffer: Buffer; mimeType: string } | null;
   userAi?: UserAiSettings | null;
   sessionUserId?: number | null;
-  abortSignal?: AbortSignal;
 };
 
 async function extractWithVision(
@@ -306,19 +305,11 @@ async function scrapeOnce(
   ]);
 }
 
-function throwIfAborted(signal?: AbortSignal) {
-  if (signal?.aborted) {
-    throw new ScrapeError("Tracker was paused");
-  }
-}
-
 async function scrapeOnceInner(
   url: string,
   targetDescription: string,
   options: ScrapeOptions = {},
 ): Promise<ScrapeResult> {
-  throwIfAborted(options.abortSignal);
-
   const { browser, actualHeadless } = await getBrowser(options.headed ?? false);
   const isHeaded = !actualHeadless;
   const domain = getDomainFromUrl(url);
@@ -343,8 +334,6 @@ async function scrapeOnceInner(
   const page = await context.newPage();
 
   try {
-    throwIfAborted(options.abortSignal);
-
     await page.goto(url, {
       waitUntil: "domcontentloaded",
       timeout: 60000,
@@ -388,8 +377,6 @@ async function scrapeOnceInner(
         }
       });
     }
-
-    throwIfAborted(options.abortSignal);
 
     const screenshot = await captureVisionScreenshot(page);
     const visionResult = await extractWithVision(
