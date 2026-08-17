@@ -455,7 +455,7 @@ export function Dashboard() {
             100,
         )
       : null;
-  const dataLoading = loading || authLoading;
+  const dataLoading = loading;
   const dash = t("common.dash");
   const formatCount = (count: number) => (count === 0 ? dash : count);
 

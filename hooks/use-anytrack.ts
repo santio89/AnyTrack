@@ -59,7 +59,7 @@ export function useAnyTrack(logTrackerFilter: string) {
 
   const [trackers, setTrackers] = useState<TrackerRecord[]>([]);
   const [logs, setLogs] = useState<LogRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [emailConfigured, setEmailConfigured] = useState(true);
   const [aiSettings, setAiSettings] = useState<UserAiSettingsPublic | null>(null);
