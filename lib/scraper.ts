@@ -48,6 +48,8 @@ async function getBrowser(): Promise<Browser> {
       "--disable-blink-features=AutomationControlled",
       "--disable-font-subpixel-positioning",
       "--font-render-hinting=none",
+      "--start-maximized",
+      "--disable-infobars",
     ],
   };
 
@@ -265,7 +267,7 @@ async function scrapeOnceInner(
   const browser = await getBrowser();
 
   const context = await browser.newContext({
-    viewport: { width: 1440, height: 900 },
+    viewport: { width: 1920, height: 1080 },
     locale: "es-AR",
     timezoneId: "America/Argentina/Buenos_Aires",
     userAgent:
@@ -277,6 +279,17 @@ async function scrapeOnceInner(
 
   await context.addInitScript(() => {
     Object.defineProperty(navigator, "webdriver", { get: () => undefined });
+
+    Object.defineProperty(navigator, "plugins", {
+      get: () => [1, 2, 3, 4, 5],
+    });
+
+    Object.defineProperty(navigator, "languages", {
+      get: () => ["es-AR", "es", "en-US", "en"],
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).chrome = { runtime: {} };
   });
 
   const page = await context.newPage();
@@ -292,8 +305,14 @@ async function scrapeOnceInner(
       .catch(() => undefined);
 
     await dismissBlockingOverlays(page);
-    await page.waitForTimeout(2000);
+    const waitMs = 2000 + Math.random() * 3000;
+    await page.waitForTimeout(waitMs);
     await dismissBlockingOverlays(page);
+
+    await page.evaluate(() => {
+      window.scrollBy(0, 300 + Math.random() * 200);
+    });
+    await page.waitForTimeout(500 + Math.random() * 1000);
 
     await page.evaluate(() => {
       const style = document.createElement("style");
