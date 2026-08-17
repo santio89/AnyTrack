@@ -164,7 +164,7 @@ export function Dashboard() {
 
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const pollDashboardData = useCallback(() => fetchData(true), [fetchData]);
+  const pollDashboardData = useCallback(() => fetchData(), [fetchData]);
   const {
     runningTrackers,
     getTrackerRunningState,

@@ -107,13 +107,32 @@ async function captureVisionScreenshot(
   const qualities = [80, 60, 45];
   const maxBytes = 3.5 * 1024 * 1024;
 
+  const takeScreenshot = async (quality: number): Promise<Buffer> => {
+    try {
+      return await page.screenshot({
+        fullPage: false,
+        type: "jpeg",
+        quality,
+        timeout: 60_000,
+      });
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        /timeout/i.test(error.message) &&
+        quality === qualities[0]
+      ) {
+        return page.locator("html").screenshot({
+          type: "jpeg",
+          quality,
+          timeout: 60_000,
+        });
+      }
+      throw error;
+    }
+  };
+
   for (const quality of qualities) {
-    const screenshot = await page.screenshot({
-      fullPage: false,
-      type: "jpeg",
-      quality,
-      timeout: 90_000,
-    });
+    const screenshot = await takeScreenshot(quality);
 
     if (screenshot.length <= maxBytes) {
       return screenshot;
@@ -124,7 +143,7 @@ async function captureVisionScreenshot(
     fullPage: false,
     type: "jpeg",
     quality: 35,
-    timeout: 90_000,
+    timeout: 60_000,
   });
 }
 

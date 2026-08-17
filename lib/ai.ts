@@ -160,7 +160,10 @@ export function resolveFreeModel(model: string): string | null {
   return process.env.OPENROUTER_FREE_MODEL ?? "openrouter/free";
 }
 
-export function buildAiAttemptChain(model: string): AiAttempt[] {
+export function buildAiAttemptChain(
+  model: string,
+  hasImages = false,
+): AiAttempt[] {
   const attempts: AiAttempt[] = [];
 
   function pushAttempt(provider: AiProvider, resolvedModel: string, label: string) {
@@ -175,23 +178,26 @@ export function buildAiAttemptChain(model: string): AiAttempt[] {
   }
 
   if (isFreeModelsPrimary() && isOpenRouterConfigured()) {
-    const freeModel = resolveFreeModel(model);
+    if (!hasImages) {
+      const freeModel = resolveFreeModel(model);
 
-    if (freeModel) {
-      pushAttempt("openrouter", freeModel, "OpenRouter (free)");
-
-      if (isGatewayConfigured()) {
-        pushAttempt("gateway", model, providerLabel("gateway"));
+      if (freeModel) {
+        pushAttempt("openrouter", freeModel, "OpenRouter (free)");
       }
-
-      const paidOpenRouterModel = resolveModelForProvider(model, "openrouter");
-
-      if (paidOpenRouterModel !== freeModel) {
-        pushAttempt("openrouter", paidOpenRouterModel, providerLabel("openrouter"));
-      }
-
-      return attempts;
     }
+
+    if (isGatewayConfigured()) {
+      pushAttempt("gateway", model, providerLabel("gateway"));
+    }
+
+    const paidOpenRouterModel = resolveModelForProvider(model, "openrouter");
+    const freeModel = hasImages ? null : resolveFreeModel(model);
+
+    if (paidOpenRouterModel !== freeModel) {
+      pushAttempt("openrouter", paidOpenRouterModel, providerLabel("openrouter"));
+    }
+
+    return attempts;
   }
 
   const primary = getPrimaryAiProvider();
@@ -215,10 +221,12 @@ export function buildAiAttemptChain(model: string): AiAttempt[] {
     );
   }
 
-  const freeModel = resolveFreeModel(model);
+  if (!hasImages) {
+    const freeModel = resolveFreeModel(model);
 
-  if (freeModel) {
-    pushAttempt("openrouter", freeModel, "OpenRouter (free)");
+    if (freeModel) {
+      pushAttempt("openrouter", freeModel, "OpenRouter (free)");
+    }
   }
 
   return attempts;
@@ -453,7 +461,13 @@ export async function createChatCompletion(
     }
   }
 
-  const attempts = buildAiAttemptChain(params.model);
+  const hasImages = params.messages.some(
+    (msg) =>
+      Array.isArray(msg.content) &&
+      msg.content.some((part) => part.type === "image_url"),
+  );
+
+  const attempts = buildAiAttemptChain(params.model, hasImages);
 
   if (attempts.length === 0) {
     throw new Error(
