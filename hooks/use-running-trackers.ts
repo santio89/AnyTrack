@@ -130,19 +130,28 @@ export function useRunningTrackers({
   }, [isLoaded, syncRunningState]);
 
   useEffect(() => {
+    if (!isLoaded) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      void syncRunningState();
+    }, 2000);
+
+    return () => window.clearInterval(interval);
+  }, [isLoaded, syncRunningState]);
+
+  useEffect(() => {
     if (!isLoaded || runningTrackers.length === 0) {
       return;
     }
 
     const interval = window.setInterval(() => {
-      void (async () => {
-        await syncRunningState();
-        await onPoll?.();
-      })();
+      void onPoll?.();
     }, 2000);
 
     return () => window.clearInterval(interval);
-  }, [isLoaded, onPoll, runningTrackers.length, syncRunningState]);
+  }, [isLoaded, onPoll, runningTrackers.length]);
 
   const markRunning = useCallback((trackerId: string, headed: boolean) => {
     setLocalRunning((current) => {

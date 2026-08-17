@@ -15,6 +15,7 @@ type RunningTrackerMeta = {
   userId: number;
   headed: boolean;
   startedAt: number;
+  abortController: AbortController;
 };
 
 const runningTrackers = new Map<number, RunningTrackerMeta>();
@@ -109,10 +110,13 @@ async function processTracker(
     return;
   }
 
+  const abortController = new AbortController();
+
   runningTrackers.set(tracker.id, {
     userId: tracker.userId,
     headed: options.headed ?? false,
     startedAt: Date.now(),
+    abortController,
   });
 
   try {
@@ -129,12 +133,21 @@ async function processTracker(
       ? await getUserAiSettingsForUserId(tracker.userId)
       : null;
 
-    const result = await scrapeTarget(tracker.url, tracker.targetDescription, {
-      headed: options.headed,
-      referenceImagePath,
-      userAi,
-      sessionUserId: tracker.userId,
-    });
+    const result = await Promise.race([
+      scrapeTarget(tracker.url, tracker.targetDescription, {
+        headed: options.headed,
+        referenceImagePath,
+        userAi,
+        sessionUserId: tracker.userId,
+        abortSignal: abortController.signal,
+      }),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Scrape timed out after 5 minutes")),
+          300_000,
+        ),
+      ),
+    ]);
     const screenshotPath = await saveScreenshot(result.screenshot, tracker.id);
 
     await db.insert(logs).values({
@@ -234,6 +247,15 @@ export function getRunningTrackersForUser(userId: number) {
       headed: meta.headed,
       startedAt: meta.startedAt,
     }));
+}
+
+export function abortTrackerRun(trackerId: number): boolean {
+  const meta = runningTrackers.get(trackerId);
+  if (!meta) {
+    return false;
+  }
+  meta.abortController.abort();
+  return true;
 }
 
 export async function runTrackerNow(
