@@ -68,6 +68,7 @@ export function useAnyTrack(logTrackerFilter: string) {
   const [syncPromptChecked, setSyncPromptChecked] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const previousSignedIn = useRef<boolean | undefined>(undefined);
+  const initialFetchComplete = useRef(false);
 
   const fetchData = useCallback(
     async (showRefresh = false) => {
@@ -176,12 +177,17 @@ export function useAnyTrack(logTrackerFilter: string) {
     previousSignedIn.current = isSignedIn;
 
     if (authChanged) {
+      initialFetchComplete.current = false;
       setLoading(true);
       setTrackers([]);
       setLogs([]);
+    } else if (isAuthenticated && !initialFetchComplete.current) {
+      setLoading(true);
     }
 
-    void fetchData();
+    void fetchData().finally(() => {
+      initialFetchComplete.current = true;
+    });
   }, [fetchData, isLoaded, isSignedIn, logTrackerFilter]);
 
   useEffect(() => {
