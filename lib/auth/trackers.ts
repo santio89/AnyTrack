@@ -3,7 +3,7 @@ import { trackers } from "@/db/schema";
 import { db, initDb } from "@/lib/db";
 
 export async function getTrackerForUser(trackerId: number, userId: number) {
-  initDb();
+  await initDb();
 
   const [tracker] = await db
     .select()

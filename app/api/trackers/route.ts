@@ -11,10 +11,11 @@ import {
   parseReferenceImageInput,
   saveReferenceImage,
 } from "@/lib/reference-images";
+import { validatePublicHttpUrl } from "@/lib/http-url";
 
 export async function GET() {
   try {
-    initDb();
+    await initDb();
     const userId = await getCurrentUserId();
 
     if (userId == null) {
@@ -36,7 +37,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    initDb();
+    await initDb();
     const userId = await requireUserId();
     const body = (await request.json()) as {
       url?: string;
@@ -51,8 +52,10 @@ export async function POST(request: Request) {
       };
     };
 
-    if (!body.url?.trim()) {
-      return NextResponse.json({ error: "URL is required" }, { status: 400 });
+    const url = body.url?.trim() ?? "";
+    const urlError = validatePublicHttpUrl(url);
+    if (urlError) {
+      return NextResponse.json({ error: urlError }, { status: 400 });
     }
 
     if (!body.targetDescription?.trim()) {
@@ -83,7 +86,7 @@ export async function POST(request: Request) {
       .insert(trackers)
       .values({
         userId,
-        url: body.url.trim(),
+        url,
         targetDescription: body.targetDescription.trim(),
         frequencyMinutes: body.frequencyMinutes ?? 60,
         sortOrder: 0,

@@ -9,7 +9,7 @@ import { clearLogs, getRecentLogs } from "@/lib/worker";
 
 export async function GET(request: Request) {
   try {
-    initDb();
+    await initDb();
     const userId = await getCurrentUserId();
 
     if (userId == null) {
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    initDb();
+    await initDb();
     const userId = await requireUserId();
     const trackerIdParam = new URL(request.url).searchParams.get("trackerId");
     const trackerId =

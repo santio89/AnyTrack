@@ -15,7 +15,7 @@ import { isUserAiProvider } from "@/types/ai-settings";
 
 export async function GET() {
   try {
-    initDb();
+    await initDb();
     const userId = await getCurrentUserId();
 
     if (userId == null) {
@@ -34,7 +34,7 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
-    initDb();
+    await initDb();
     const userId = await requireUserId();
 
     const body = (await request.json()) as {
@@ -75,7 +75,7 @@ export async function PUT(request: Request) {
 
 export async function DELETE() {
   try {
-    initDb();
+    await initDb();
     const userId = await requireUserId();
     await clearUserAiSettings(userId);
 

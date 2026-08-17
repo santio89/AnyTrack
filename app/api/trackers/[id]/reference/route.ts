@@ -1,5 +1,4 @@
-import fs from "node:fs/promises";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { trackers } from "@/db/schema";
 import { db, initDb } from "@/lib/db";
@@ -8,8 +7,8 @@ import {
   unauthorizedResponse,
 } from "@/lib/auth/session";
 import {
+  loadReferenceImage,
   parseReferenceImagePaths,
-  resolveReferenceImagePath,
 } from "@/lib/reference-images";
 
 type RouteContext = {
@@ -18,7 +17,7 @@ type RouteContext = {
 
 export async function GET(_request: Request, context: RouteContext) {
   try {
-    initDb();
+    await initDb();
     const userId = await getCurrentUserId();
 
     if (userId == null) {
@@ -38,7 +37,13 @@ export async function GET(_request: Request, context: RouteContext) {
         referenceImagePaths: trackers.referenceImagePaths,
       })
       .from(trackers)
-      .where(and(eq(trackers.id, trackerId), eq(trackers.userId, userId)))
+      .where(
+        and(
+          eq(trackers.id, trackerId),
+          eq(trackers.userId, userId),
+          isNull(trackers.deletedAt),
+        ),
+      )
       .limit(1);
 
     const referenceImagePath =
@@ -51,22 +56,15 @@ export async function GET(_request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Reference image not found" }, { status: 404 });
     }
 
-    const filePath = resolveReferenceImagePath(referenceImagePath);
-    const file = await fs.readFile(filePath);
-    const extension = referenceImagePath.split(".").pop()?.toLowerCase();
+    const image = await loadReferenceImage(referenceImagePath);
 
-    const contentType =
-      extension === "png"
-        ? "image/png"
-        : extension === "webp"
-          ? "image/webp"
-          : extension === "gif"
-            ? "image/gif"
-            : "image/jpeg";
+    if (!image) {
+      return NextResponse.json({ error: "Reference image not found" }, { status: 404 });
+    }
 
-    return new NextResponse(file, {
+    return new NextResponse(new Uint8Array(image.buffer), {
       headers: {
-        "Content-Type": contentType,
+        "Content-Type": image.mimeType,
         "Cache-Control": "public, max-age=31536000, immutable",
       },
     });

@@ -11,7 +11,7 @@ type UpsertUserInput = {
 };
 
 export async function upsertUser(input: UpsertUserInput) {
-  initDb();
+  await initDb();
 
   const now = new Date();
 
@@ -77,7 +77,7 @@ export async function upsertUser(input: UpsertUserInput) {
 }
 
 export async function getUserById(userId: number) {
-  initDb();
+  await initDb();
 
   const [user] = await db
     .select()

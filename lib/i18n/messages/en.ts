@@ -209,6 +209,7 @@ export const en = {
     error: "Error",
     success: "Success",
     noData: "No data",
+    running: "Running",
   },
   aiSettings: {
     title: "AI settings",

@@ -1,4 +1,3 @@
-import fs from "node:fs/promises";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { logs, trackers } from "@/db/schema";
@@ -7,7 +6,7 @@ import {
   getCurrentUserId,
   unauthorizedResponse,
 } from "@/lib/auth/session";
-import { resolveScreenshotPath } from "@/lib/screenshots";
+import { readScreenshot } from "@/lib/screenshots";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -15,7 +14,7 @@ type RouteContext = {
 
 export async function GET(_request: Request, context: RouteContext) {
   try {
-    initDb();
+    await initDb();
     const userId = await getCurrentUserId();
 
     if (userId == null) {
@@ -40,10 +39,9 @@ export async function GET(_request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Screenshot not found" }, { status: 404 });
     }
 
-    const filePath = resolveScreenshotPath(log.screenshotPath);
-    const file = await fs.readFile(filePath);
+    const file = await readScreenshot(log.screenshotPath);
 
-    return new NextResponse(file, {
+    return new NextResponse(new Uint8Array(file), {
       headers: {
         "Content-Type": "image/jpeg",
         "Cache-Control": "public, max-age=31536000, immutable",

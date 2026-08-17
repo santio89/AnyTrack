@@ -6,7 +6,7 @@ import { requireUserId } from "@/lib/auth/session";
 
 export async function PUT(request: Request) {
   try {
-    initDb();
+    await initDb();
     const userId = await requireUserId();
     const body = (await request.json()) as { orderedIds?: number[] };
 

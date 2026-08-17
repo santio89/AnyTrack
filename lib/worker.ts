@@ -107,6 +107,7 @@ async function processTracker(
       headed: options.headed,
       referenceImagePath,
       userAi,
+      sessionUserId: tracker.userId,
     });
     const screenshotPath = await saveScreenshot(result.screenshot, tracker.id);
 
@@ -219,7 +220,13 @@ export async function runTrackerNow(
   const [tracker] = await db
     .select()
     .from(trackers)
-    .where(and(eq(trackers.id, trackerId), eq(trackers.userId, userId)))
+    .where(
+      and(
+        eq(trackers.id, trackerId),
+        eq(trackers.userId, userId),
+        isNull(trackers.deletedAt),
+      ),
+    )
     .limit(1);
 
   if (!tracker) {

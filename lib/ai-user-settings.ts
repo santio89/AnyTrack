@@ -37,7 +37,7 @@ export function parseGuestAiSettingsBody(
 export async function getUserAiSettingsForUserId(
   userId: number,
 ): Promise<UserAiSettings | null> {
-  initDb();
+  await initDb();
 
   const [user] = await db
     .select({
@@ -78,7 +78,7 @@ export async function getUserAiSettingsForUserId(
 export async function getUserAiSettingsPublic(
   userId: number,
 ): Promise<UserAiSettingsPublic> {
-  initDb();
+  await initDb();
 
   const [user] = await db
     .select({
@@ -121,7 +121,7 @@ export async function saveUserAiSettings(
     clearApiKey?: boolean;
   },
 ): Promise<UserAiSettingsPublic> {
-  initDb();
+  await initDb();
 
   const [existing] = await db
     .select({
@@ -179,7 +179,7 @@ export async function saveUserAiSettings(
 }
 
 export async function clearUserAiSettings(userId: number) {
-  initDb();
+  await initDb();
 
   await db
     .update(users)

@@ -1,5 +1,9 @@
-import fs from "node:fs/promises";
 import path from "node:path";
+import {
+  deleteObject,
+  downloadObject,
+  uploadObject,
+} from "@/lib/object-storage";
 
 export {
   parseReferenceImagePaths,
@@ -20,14 +24,8 @@ const EXTENSION_BY_MIME: Record<string, string> = {
   "image/gif": "gif",
 };
 
-export function resolveReferenceImagesDir(): string {
-  if (process.env.REFERENCE_IMAGES_PATH) {
-    return process.env.REFERENCE_IMAGES_PATH;
-  }
-
-  return process.env.NODE_ENV === "production"
-    ? "/var/data/reference-images"
-    : path.join(process.cwd(), "data", "reference-images");
+function toObjectPath(relativePath: string) {
+  return `reference-images/${relativePath}`;
 }
 
 export function parseReferenceImageInput(input: {
@@ -68,27 +66,11 @@ export async function saveReferenceImage(
   mimeType = "image/jpeg",
   slot = 0,
 ): Promise<string> {
-  const dir = resolveReferenceImagesDir();
-  await fs.mkdir(dir, { recursive: true });
-
   const extension = EXTENSION_BY_MIME[mimeType] ?? "jpg";
   const filename = `${trackerId}-${slot}.${extension}`;
-  const fullPath = path.join(dir, filename);
-
-  await fs.writeFile(fullPath, buffer);
+  await uploadObject(toObjectPath(filename), buffer, mimeType);
 
   return filename;
-}
-
-export function resolveReferenceImagePath(relativePath: string): string {
-  const baseDir = path.resolve(/*turbopackIgnore: true*/ resolveReferenceImagesDir());
-  const fullPath = path.resolve(baseDir, relativePath);
-
-  if (!fullPath.startsWith(baseDir + path.sep) && fullPath !== baseDir) {
-    throw new Error("Invalid reference image path");
-  }
-
-  return fullPath;
 }
 
 function mimeTypeFromPath(relativePath: string) {
@@ -107,8 +89,7 @@ export async function loadReferenceImage(
     return null;
   }
 
-  const fullPath = resolveReferenceImagePath(relativePath);
-  const buffer = await fs.readFile(/*turbopackIgnore: true*/ fullPath);
+  const buffer = await downloadObject(toObjectPath(relativePath));
 
   return {
     buffer,
@@ -123,7 +104,9 @@ export async function loadReferenceImages(
     return [];
   }
 
-  const images = await Promise.all(relativePaths.map((relativePath) => loadReferenceImage(relativePath)));
+  const images = await Promise.all(
+    relativePaths.map((relativePath) => loadReferenceImage(relativePath)),
+  );
   return images.filter((image): image is { buffer: Buffer; mimeType: string } => image !== null);
 }
 
@@ -132,11 +115,7 @@ export async function deleteReferenceImage(relativePath: string | null | undefin
     return;
   }
 
-  try {
-    await fs.unlink(resolveReferenceImagePath(relativePath));
-  } catch {
-    // File may already be gone.
-  }
+  await deleteObject(toObjectPath(relativePath));
 }
 
 export async function deleteReferenceImages(relativePaths: string[] | null | undefined) {

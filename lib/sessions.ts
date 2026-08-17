@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { BrowserContextOptions } from "playwright";
 import { siteSessions } from "@/db/schema";
 import { db } from "@/lib/db";
@@ -7,19 +7,23 @@ export function getDomainFromUrl(url: string): string {
   return new URL(url).hostname.replace(/^www\./, "");
 }
 
-export async function getSession(domain: string) {
+export async function getSession(userId: number, domain: string) {
   const [session] = await db
     .select()
     .from(siteSessions)
-    .where(eq(siteSessions.domain, domain))
+    .where(and(eq(siteSessions.userId, userId), eq(siteSessions.domain, domain)))
     .limit(1);
 
   return session ?? null;
 }
 
-export async function saveSession(domain: string, storageState: object) {
+export async function saveSession(
+  userId: number,
+  domain: string,
+  storageState: object,
+) {
   const now = new Date();
-  const existing = await getSession(domain);
+  const existing = await getSession(userId, domain);
 
   if (existing) {
     await db
@@ -28,9 +32,12 @@ export async function saveSession(domain: string, storageState: object) {
         storageState: JSON.stringify(storageState),
         updatedAt: now,
       })
-      .where(eq(siteSessions.domain, domain));
+      .where(
+        and(eq(siteSessions.userId, userId), eq(siteSessions.domain, domain)),
+      );
   } else {
     await db.insert(siteSessions).values({
+      userId,
       domain,
       storageState: JSON.stringify(storageState),
       createdAt: now,
@@ -39,15 +46,16 @@ export async function saveSession(domain: string, storageState: object) {
   }
 }
 
-export async function deleteSession(domain: string) {
-  await db.delete(siteSessions).where(eq(siteSessions.domain, domain));
-}
-
 export async function getStorageStateForUrl(
   url: string,
+  userId?: number | null,
 ): Promise<BrowserContextOptions["storageState"] | undefined> {
+  if (userId == null) {
+    return undefined;
+  }
+
   const domain = getDomainFromUrl(url);
-  const session = await getSession(domain);
+  const session = await getSession(userId, domain);
 
   if (!session) {
     return undefined;

@@ -178,6 +178,7 @@ export type ScrapeOptions = {
   referenceImagePath?: string | null;
   referenceImage?: { buffer: Buffer; mimeType: string } | null;
   userAi?: UserAiSettings | null;
+  sessionUserId?: number | null;
 };
 
 async function extractWithVision(
@@ -270,7 +271,7 @@ async function scrapeOnce(
 ): Promise<ScrapeResult> {
   const browser = await getBrowser(options.headed ?? false);
   const domain = getDomainFromUrl(url);
-  const storageState = await getStorageStateForUrl(url);
+  const storageState = await getStorageStateForUrl(url, options.sessionUserId);
 
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
@@ -292,9 +293,13 @@ async function scrapeOnce(
 
   try {
     await page.goto(url, {
-      waitUntil: "load",
+      waitUntil: "domcontentloaded",
       timeout: 60000,
     });
+
+    await page
+      .waitForLoadState("networkidle", { timeout: 8000 })
+      .catch(() => undefined);
 
     await dismissBlockingOverlays(page);
     await page.waitForTimeout(options.headed ? 3000 : 2000);
@@ -314,9 +319,13 @@ async function scrapeOnce(
       screenshot,
     };
   } finally {
-    if (options.headed) {
+    if (options.headed && options.sessionUserId != null) {
       try {
-        await saveSession(domain, await context.storageState());
+        await saveSession(
+          options.sessionUserId,
+          domain,
+          await context.storageState(),
+        );
       } catch (error) {
         console.warn("[AnyTrack] Could not save session from visible browser run:", error);
       }

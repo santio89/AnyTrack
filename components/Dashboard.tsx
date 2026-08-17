@@ -73,6 +73,19 @@ import { trackerHasReference } from "@/lib/tracker-records";
 import { cn } from "@/lib/utils";
 import type { LogRecord, TrackerRecord } from "@/types/tracker";
 
+type DashboardLogEntry =
+  | {
+      kind: "running";
+      id: string;
+      trackerId: string;
+      startedAt: number;
+      trackerDescription: string | null;
+    }
+  | {
+      kind: "log";
+      log: LogRecord;
+    };
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -153,6 +166,7 @@ export function Dashboard() {
 
   const pollDashboardData = useCallback(() => fetchData(true), [fetchData]);
   const {
+    runningTrackers,
     getTrackerRunningState,
     markRunning,
     clearRunning,
@@ -458,6 +472,31 @@ export function Dashboard() {
   const dataLoading = loading;
   const dash = t("common.dash");
   const formatCount = (count: number) => (count === 0 ? dash : count);
+  const logTableEntries = useMemo((): DashboardLogEntry[] => {
+    const trackerById = new Map(trackers.map((tracker) => [tracker.id, tracker]));
+
+    const runningEntries: DashboardLogEntry[] = runningTrackers
+      .filter(
+        (run) =>
+          logTrackerFilter === "all" || run.id === logTrackerFilter,
+      )
+      .map((run) => ({
+        kind: "running" as const,
+        id: `running-${run.id}`,
+        trackerId: run.id,
+        startedAt: run.startedAt,
+        trackerDescription:
+          trackerById.get(run.id)?.targetDescription ?? null,
+      }));
+
+    const completedEntries: DashboardLogEntry[] = logs.map((log) => ({
+      kind: "log" as const,
+      log,
+    }));
+
+    return [...runningEntries, ...completedEntries];
+  }, [logTrackerFilter, logs, runningTrackers, trackers]);
+  const hasLogTableEntries = logTableEntries.length > 0;
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -825,7 +864,7 @@ export function Dashboard() {
                 <div className="flex items-center justify-center py-16">
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
-              ) : logs.length === 0 ? (
+              ) : !hasLogTableEntries ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">
                   {logTrackerFilter === "all"
                     ? t("dashboard.logs.emptyAll")
@@ -843,78 +882,112 @@ export function Dashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {logs.map((log) => (
-                      <TableRow
-                        key={log.id}
-                        className="cursor-pointer"
-                        tabIndex={0}
-                        role="button"
-                        onClick={() => setSelectedLog(log)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            setSelectedLog(log);
-                          }
-                        }}
-                      >
-                        <TableCell className="whitespace-nowrap text-muted-foreground">
-                          {formatDate(new Date(log.createdAt), locale)}
-                        </TableCell>
-                        <TableCell onClick={(event) => event.stopPropagation()}>
-                          <LogScreenshot
-                            logId={log.id}
-                            screenshotPath={log.screenshotPath}
-                            screenshotDataUrl={log.screenshotDataUrl}
-                            label={
-                              log.trackerDescription ??
-                              t("common.trackerNumber", { id: log.trackerId })
+                    {logTableEntries.map((entry) => {
+                      if (entry.kind === "running") {
+                        return (
+                          <TableRow key={entry.id} className="bg-muted/20">
+                            <TableCell className="whitespace-nowrap text-muted-foreground">
+                              {formatDate(new Date(entry.startedAt), locale)}
+                            </TableCell>
+                            <TableCell>{dash}</TableCell>
+                            <TableCell className="max-w-[200px]">
+                              <TruncatedWithTooltip
+                                text={
+                                  entry.trackerDescription ??
+                                  t("common.trackerNumber", {
+                                    id: entry.trackerId,
+                                  })
+                                }
+                              />
+                            </TableCell>
+                            <TableCell className="max-w-[240px] font-medium text-muted-foreground">
+                              {dash}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary" className="gap-1">
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                {t("status.running")}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      }
+
+                      const log = entry.log;
+
+                      return (
+                        <TableRow
+                          key={log.id}
+                          className="cursor-pointer"
+                          tabIndex={0}
+                          role="button"
+                          onClick={() => setSelectedLog(log)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              setSelectedLog(log);
                             }
-                            onOpen={() => setSelectedLog(null)}
-                          />
-                        </TableCell>
-                        <TableCell className="max-w-[200px]">
-                          <TruncatedWithTooltip
-                            text={
-                              log.trackerDescription ??
-                              t("common.trackerNumber", { id: log.trackerId })
-                            }
-                          />
-                        </TableCell>
-                        <TableCell className="max-w-[240px] font-medium">
-                          {log.error ? (
-                            <span className="text-destructive">{t("common.dash")}</span>
-                          ) : log.extractedValue ? (
-                            <TruncatedWithTooltip text={log.extractedValue} />
-                          ) : (
-                            t("common.dash")
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {log.error ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge
-                                  variant="destructive"
-                                  className="cursor-help"
+                          }}
+                        >
+                          <TableCell className="whitespace-nowrap text-muted-foreground">
+                            {formatDate(new Date(log.createdAt), locale)}
+                          </TableCell>
+                          <TableCell onClick={(event) => event.stopPropagation()}>
+                            <LogScreenshot
+                              logId={log.id}
+                              screenshotPath={log.screenshotPath}
+                              screenshotDataUrl={log.screenshotDataUrl}
+                              label={
+                                log.trackerDescription ??
+                                t("common.trackerNumber", { id: log.trackerId })
+                              }
+                              onOpen={() => setSelectedLog(null)}
+                            />
+                          </TableCell>
+                          <TableCell className="max-w-[200px]">
+                            <TruncatedWithTooltip
+                              text={
+                                log.trackerDescription ??
+                                t("common.trackerNumber", { id: log.trackerId })
+                              }
+                            />
+                          </TableCell>
+                          <TableCell className="max-w-[240px] font-medium">
+                            {log.error ? (
+                              <span className="text-destructive">{t("common.dash")}</span>
+                            ) : log.extractedValue ? (
+                              <TruncatedWithTooltip text={log.extractedValue} />
+                            ) : (
+                              t("common.dash")
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {log.error ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge
+                                    variant="destructive"
+                                    className="cursor-help"
+                                  >
+                                    {t("status.error")}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent
+                                  side="top"
+                                  className="max-w-sm whitespace-pre-wrap break-words text-left"
                                 >
-                                  {t("status.error")}
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent
-                                side="top"
-                                className="max-w-sm whitespace-pre-wrap break-words text-left"
-                              >
-                                {formatScrapeErrorMessage(log.error)}
-                              </TooltipContent>
-                            </Tooltip>
-                          ) : log.extractedValue ? (
-                            <Badge variant="success">{t("status.success")}</Badge>
-                          ) : (
-                            <Badge variant="warning">{t("status.noData")}</Badge>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                                  {formatScrapeErrorMessage(log.error)}
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : log.extractedValue ? (
+                              <Badge variant="success">{t("status.success")}</Badge>
+                            ) : (
+                              <Badge variant="warning">{t("status.noData")}</Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               )}

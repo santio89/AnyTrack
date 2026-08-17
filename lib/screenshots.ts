@@ -1,42 +1,25 @@
-import fs from "node:fs/promises";
-import path from "node:path";
+import {
+  deleteObject,
+  deleteObjectsByPrefix,
+  downloadObject,
+  uploadObject,
+} from "@/lib/object-storage";
 
-export function resolveScreenshotsDir(): string {
-  if (process.env.SCREENSHOTS_PATH) {
-    return process.env.SCREENSHOTS_PATH;
-  }
-
-  return process.env.NODE_ENV === "production"
-    ? "/var/data/screenshots"
-    : path.join(process.cwd(), "data", "screenshots");
+function toObjectPath(relativePath: string) {
+  return `screenshots/${relativePath}`;
 }
 
 export async function saveScreenshot(
   buffer: Buffer,
   trackerId: number,
 ): Promise<string> {
-  const dir = path.join(
-    /*turbopackIgnore: true*/ resolveScreenshotsDir(),
-    String(trackerId),
-  );
-  await fs.mkdir(dir, { recursive: true });
-
-  const filename = `${Date.now()}.jpg`;
-  const fullPath = path.join(dir, filename);
-  await fs.writeFile(fullPath, buffer);
-
-  return `${trackerId}/${filename}`;
+  const relativePath = `${trackerId}/${Date.now()}.jpg`;
+  await uploadObject(toObjectPath(relativePath), buffer, "image/jpeg");
+  return relativePath;
 }
 
-export function resolveScreenshotPath(relativePath: string): string {
-  const screenshotsDir = path.resolve(/*turbopackIgnore: true*/ resolveScreenshotsDir());
-  const fullPath = path.resolve(screenshotsDir, relativePath);
-
-  if (!fullPath.startsWith(screenshotsDir + path.sep) && fullPath !== screenshotsDir) {
-    throw new Error("Invalid screenshot path");
-  }
-
-  return fullPath;
+export async function readScreenshot(relativePath: string): Promise<Buffer> {
+  return downloadObject(toObjectPath(relativePath));
 }
 
 export async function deleteScreenshotFile(relativePath: string | null | undefined) {
@@ -44,22 +27,9 @@ export async function deleteScreenshotFile(relativePath: string | null | undefin
     return;
   }
 
-  try {
-    await fs.unlink(resolveScreenshotPath(relativePath));
-  } catch {
-    // File may already be gone.
-  }
+  await deleteObject(toObjectPath(relativePath));
 }
 
 export async function deleteTrackerScreenshots(trackerId: number) {
-  const dir = path.join(
-    /*turbopackIgnore: true*/ resolveScreenshotsDir(),
-    String(trackerId),
-  );
-
-  try {
-    await fs.rm(dir, { recursive: true, force: true });
-  } catch {
-    // Directory may already be gone.
-  }
+  await deleteObjectsByPrefix(`screenshots/${trackerId}`);
 }

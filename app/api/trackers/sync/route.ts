@@ -3,10 +3,13 @@ import { eq } from "drizzle-orm";
 import { trackers } from "@/db/schema";
 import { db, initDb } from "@/lib/db";
 import { requireUserId } from "@/lib/auth/session";
+import { validatePublicHttpUrl } from "@/lib/http-url";
 import {
   parseReferenceImageInput,
   saveReferenceImage,
 } from "@/lib/reference-images";
+
+const MAX_SYNC_TRACKERS = 100;
 
 type SyncTrackerInput = {
   url: string;
@@ -24,7 +27,7 @@ type SyncTrackerInput = {
 
 export async function POST(request: Request) {
   try {
-    initDb();
+    await initDb();
     const userId = await requireUserId();
     const body = (await request.json()) as { trackers?: SyncTrackerInput[] };
     const incoming = body.trackers ?? [];
@@ -33,16 +36,41 @@ export async function POST(request: Request) {
       return NextResponse.json({ imported: 0, trackers: [] });
     }
 
+    if (incoming.length > MAX_SYNC_TRACKERS) {
+      return NextResponse.json(
+        { error: `You can sync up to ${MAX_SYNC_TRACKERS} trackers at once` },
+        { status: 400 },
+      );
+    }
+
     const now = new Date();
     const created = [];
 
     for (const [index, item] of incoming.entries()) {
+      const url = item.url?.trim() ?? "";
+      const targetDescription = item.targetDescription?.trim() ?? "";
+      const urlError = validatePublicHttpUrl(url);
+
+      if (urlError) {
+        return NextResponse.json(
+          { error: `Tracker ${index + 1}: ${urlError}` },
+          { status: 400 },
+        );
+      }
+
+      if (!targetDescription) {
+        return NextResponse.json(
+          { error: `Tracker ${index + 1}: Target description is required` },
+          { status: 400 },
+        );
+      }
+
       const [tracker] = await db
         .insert(trackers)
         .values({
           userId,
-          url: item.url.trim(),
-          targetDescription: item.targetDescription.trim(),
+          url,
+          targetDescription,
           frequencyMinutes: item.frequencyMinutes ?? 60,
           sortOrder: item.sortOrder ?? index,
           notifyOnChange: item.notifyOnChange,

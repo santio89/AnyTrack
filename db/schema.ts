@@ -1,8 +1,17 @@
 import { relations } from "drizzle-orm";
-import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  boolean,
+  doublePrecision,
+  integer,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 
-export const users = sqliteTable("users", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
   name: text("name"),
   image: text("image"),
@@ -10,19 +19,13 @@ export const users = sqliteTable("users", {
   clerkId: text("clerk_id").unique(),
   aiProvider: text("ai_provider"),
   aiApiKeyEncrypted: text("ai_api_key_encrypted"),
-  aiFallbackEnabled: integer("ai_fallback_enabled", { mode: "boolean" })
-    .notNull()
-    .default(true),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .$defaultFn(() => new Date()),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .notNull()
-    .$defaultFn(() => new Date()),
+  aiFallbackEnabled: boolean("ai_fallback_enabled").notNull().default(true),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
 });
 
-export const trackers = sqliteTable("trackers", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const trackers = pgTable("trackers", {
+  id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
   url: text("url").notNull(),
   targetDescription: text("target_description").notNull(),
@@ -30,47 +33,47 @@ export const trackers = sqliteTable("trackers", {
   referenceImagePaths: text("reference_image_paths"),
   frequencyMinutes: integer("frequency_minutes").notNull().default(60),
   sortOrder: integer("sort_order").notNull().default(0),
-  notifyOnChange: integer("notify_on_change", { mode: "boolean" })
-    .notNull()
-    .default(false),
+  notifyOnChange: boolean("notify_on_change").notNull().default(false),
   notificationEmail: text("notification_email"),
-  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-  lastRunAt: integer("last_run_at", { mode: "timestamp" }),
-  deletedAt: integer("deleted_at", { mode: "timestamp" }),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .$defaultFn(() => new Date()),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .notNull()
-    .$defaultFn(() => new Date()),
+  isActive: boolean("is_active").notNull().default(true),
+  lastRunAt: timestamp("last_run_at", { mode: "date" }),
+  deletedAt: timestamp("deleted_at", { mode: "date" }),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
 });
 
-export const logs = sqliteTable("logs", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const logs = pgTable("logs", {
+  id: serial("id").primaryKey(),
   trackerId: integer("tracker_id")
     .notNull()
     .references(() => trackers.id, { onDelete: "cascade" }),
   extractedValue: text("extracted_value"),
-  confidence: real("confidence"),
+  confidence: doublePrecision("confidence"),
   model: text("model"),
   error: text("error"),
   screenshotPath: text("screenshot_path"),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .$defaultFn(() => new Date()),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
-export const siteSessions = sqliteTable("site_sessions", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  domain: text("domain").notNull().unique(),
-  storageState: text("storage_state").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .$defaultFn(() => new Date()),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .notNull()
-    .$defaultFn(() => new Date()),
-});
+export const siteSessions = pgTable(
+  "site_sessions",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    domain: text("domain").notNull(),
+    storageState: text("storage_state").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => ({
+    userDomainIdx: uniqueIndex("site_sessions_user_domain_idx").on(
+      table.userId,
+      table.domain,
+    ),
+  }),
+);
 
 export const usersRelations = relations(users, ({ many }) => ({
   trackers: many(trackers),

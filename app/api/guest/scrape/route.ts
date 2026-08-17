@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { initDb } from "@/lib/db";
 import { parseGuestAiSettingsBody } from "@/lib/ai-user-settings";
+import { validatePublicHttpUrl } from "@/lib/http-url";
 import { scrapeTarget, ScrapeError } from "@/lib/scraper";
 import { parseReferenceImageInput } from "@/lib/reference-images";
 
 export async function POST(request: Request) {
   try {
-    initDb();
+    await initDb();
 
     const body = (await request.json()) as {
       url?: string;
@@ -19,12 +20,17 @@ export async function POST(request: Request) {
       aiSettings?: unknown;
     };
 
-    const url = body.url?.trim();
-    const targetDescription = body.targetDescription?.trim();
+    const url = body.url?.trim() ?? "";
+    const targetDescription = body.targetDescription?.trim() ?? "";
 
-    if (!url || !targetDescription) {
+    const urlError = validatePublicHttpUrl(url);
+    if (urlError) {
+      return NextResponse.json({ error: urlError }, { status: 400 });
+    }
+
+    if (!targetDescription) {
       return NextResponse.json(
-        { error: "URL and target description are required" },
+        { error: "Target description is required" },
         { status: 400 },
       );
     }
@@ -52,12 +58,15 @@ export async function POST(request: Request) {
     const message = error instanceof Error ? error.message : "Guest scrape failed";
 
     if (error instanceof ScrapeError) {
-      return NextResponse.json({
-        error: message,
-        screenshotDataUrl: error.screenshot
-          ? `data:image/jpeg;base64,${error.screenshot.toString("base64")}`
-          : null,
-      });
+      return NextResponse.json(
+        {
+          error: message,
+          screenshotDataUrl: error.screenshot
+            ? `data:image/jpeg;base64,${error.screenshot.toString("base64")}`
+            : null,
+        },
+        { status: 422 },
+      );
     }
 
     return NextResponse.json({ error: message }, { status: 500 });

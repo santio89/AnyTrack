@@ -212,6 +212,7 @@ export const es = {
     error: "Error",
     success: "Éxito",
     noData: "Sin datos",
+    running: "En ejecución",
   },
   aiSettings: {
     title: "Configuración de IA",

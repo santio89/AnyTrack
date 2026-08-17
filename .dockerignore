@@ -4,10 +4,6 @@ node_modules
 .env
 .env.*
 !.env.example
-data
-local.db
-local.db-wal
-local.db-shm
 test-output
 coverage
 README.md

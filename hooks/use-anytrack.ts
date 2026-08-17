@@ -65,10 +65,10 @@ export function useAnyTrack(logTrackerFilter: string) {
   const [aiSettings, setAiSettings] = useState<UserAiSettingsPublic | null>(null);
   const [savingAiSettings, setSavingAiSettings] = useState(false);
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
-  const [syncPromptChecked, setSyncPromptChecked] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const previousSignedIn = useRef<boolean | undefined>(undefined);
   const initialFetchComplete = useRef(false);
+  const syncPromptShownRef = useRef(false);
 
   const fetchData = useCallback(
     async (showRefresh = false) => {
@@ -77,6 +77,7 @@ export function useAnyTrack(logTrackerFilter: string) {
 
       try {
         if (isGuest) {
+          syncPromptShownRef.current = false;
           const guestTrackers = loadGuestTrackers();
           const guestLogs = loadGuestLogs(
             logTrackerFilter === "all" ? undefined : logTrackerFilter,
@@ -152,6 +153,11 @@ export function useAnyTrack(logTrackerFilter: string) {
           if (aiSettingsRes.ok) {
             setAiSettings((await aiSettingsRes.json()) as UserAiSettingsPublic);
           }
+
+          if (!syncPromptShownRef.current && hasGuestData()) {
+            syncPromptShownRef.current = true;
+            setSyncDialogOpen(true);
+          }
         }
       } finally {
         setLoading(false);
@@ -169,43 +175,42 @@ export function useAnyTrack(logTrackerFilter: string) {
   );
 
   useEffect(() => {
-    if (!isLoaded) return;
-
-    const authChanged =
-      previousSignedIn.current !== undefined &&
-      previousSignedIn.current !== isSignedIn;
-    previousSignedIn.current = isSignedIn;
-
-    if (authChanged) {
-      initialFetchComplete.current = false;
-      setLoading(true);
-      setTrackers([]);
-      setLogs([]);
-    } else if (isAuthenticated && !initialFetchComplete.current) {
-      setLoading(true);
-    }
-
-    void fetchData().finally(() => {
-      initialFetchComplete.current = true;
-    });
-  }, [fetchData, isLoaded, isSignedIn, logTrackerFilter]);
-
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      setSyncPromptChecked(false);
-    }
-  }, [isLoaded, isSignedIn]);
-
-  useEffect(() => {
-    if (!isLoaded || !isAuthenticated || syncPromptChecked) {
+    if (!isLoaded) {
       return;
     }
 
-    setSyncPromptChecked(true);
-    if (hasGuestData()) {
-      setSyncDialogOpen(true);
-    }
-  }, [isAuthenticated, isLoaded, syncPromptChecked]);
+    let cancelled = false;
+
+    void (async () => {
+      await Promise.resolve();
+      if (cancelled) {
+        return;
+      }
+
+      const authChanged =
+        previousSignedIn.current !== undefined &&
+        previousSignedIn.current !== isSignedIn;
+      previousSignedIn.current = isSignedIn;
+
+      if (authChanged) {
+        initialFetchComplete.current = false;
+        setLoading(true);
+        setTrackers([]);
+        setLogs([]);
+      } else if (isAuthenticated && !initialFetchComplete.current) {
+        setLoading(true);
+      }
+
+      await fetchData();
+      if (!cancelled) {
+        initialFetchComplete.current = true;
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchData, isAuthenticated, isLoaded, isSignedIn, logTrackerFilter]);
 
   useEffect(() => {
     if (!isAuthenticated) {

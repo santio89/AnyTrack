@@ -2,11 +2,6 @@ FROM mcr.microsoft.com/playwright:v1.62.1-noble
 
 WORKDIR /app
 
-ENV DB_PATH=/var/data/sqlite.db
-ENV SCREENSHOTS_PATH=/var/data/screenshots
-ENV REFERENCE_IMAGES_PATH=/var/data/reference-images
-# Set at runtime: AI_GATEWAY_API_KEY, OPENROUTER_API_KEY, RESEND_API_KEY, NOTIFICATION_FROM_EMAIL
-ENV PORT=3000
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 COPY package.json package-lock.json ./
@@ -32,9 +27,8 @@ ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 
 RUN npm run build && npm prune --omit=dev
 
+ENV PORT=3000
 ENV NODE_ENV=production
-
-RUN mkdir -p /var/data /var/data/screenshots /var/data/reference-images
 
 EXPOSE 3000
 

@@ -5,7 +5,7 @@ import { getRunningTrackersForUser } from "@/lib/worker";
 
 export async function GET() {
   try {
-    initDb();
+    await initDb();
     const userId = await requireUserId();
 
     return NextResponse.json({

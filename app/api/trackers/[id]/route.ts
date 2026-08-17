@@ -14,6 +14,7 @@ import {
 } from "@/lib/reference-images";
 import { runTrackerNow } from "@/lib/worker";
 import { deleteTrackerScreenshots } from "@/lib/screenshots";
+import { validatePublicHttpUrl } from "@/lib/http-url";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -21,7 +22,7 @@ type RouteContext = {
 
 export async function GET(_request: Request, context: RouteContext) {
   try {
-    initDb();
+    await initDb();
     const userId = await requireUserId();
     const { id } = await context.params;
     const trackerId = Number(id);
@@ -46,7 +47,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function PATCH(request: Request, context: RouteContext) {
   try {
-    initDb();
+    await initDb();
     const userId = await requireUserId();
     const { id } = await context.params;
     const trackerId = Number(id);
@@ -92,6 +93,14 @@ export async function PATCH(request: Request, context: RouteContext) {
       );
     }
 
+    const nextUrl = body.url?.trim() ?? existing.url;
+    if (body.url !== undefined) {
+      const urlError = validatePublicHttpUrl(nextUrl);
+      if (urlError) {
+        return NextResponse.json({ error: urlError }, { status: 400 });
+      }
+    }
+
     const existingPaths = parseReferenceImagePaths(
       existing.referenceImagePaths,
       existing.referenceImagePath,
@@ -117,7 +126,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     const [updated] = await db
       .update(trackers)
       .set({
-        url: body.url?.trim() ?? existing.url,
+        url: nextUrl,
         targetDescription: body.targetDescription?.trim() ?? existing.targetDescription,
         frequencyMinutes: body.frequencyMinutes ?? existing.frequencyMinutes,
         isActive: body.isActive ?? existing.isActive,
@@ -140,7 +149,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
 export async function DELETE(request: Request, context: RouteContext) {
   try {
-    initDb();
+    await initDb();
     const userId = await requireUserId();
     const { id } = await context.params;
     const trackerId = Number(id);
@@ -219,7 +228,7 @@ export async function DELETE(request: Request, context: RouteContext) {
 
 export async function POST(request: Request, context: RouteContext) {
   try {
-    initDb();
+    await initDb();
     const userId = await requireUserId();
     const { id } = await context.params;
     const trackerId = Number(id);
