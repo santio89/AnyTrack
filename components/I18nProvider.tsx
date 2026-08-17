@@ -10,14 +10,6 @@ import type { Locale } from "@/lib/i18n/types";
 
 const STORAGE_KEY = "anytrack-locale";
 
-function detectBrowserLocale(): Locale {
-  if (typeof navigator === "undefined") {
-    return "en";
-  }
-
-  return navigator.language.toLowerCase().startsWith("es") ? "es" : "en";
-}
-
 const localeStore = createSyncedStorageStore<Locale>(
   STORAGE_KEY,
   (stored) => {
@@ -25,11 +17,7 @@ const localeStore = createSyncedStorageStore<Locale>(
       return stored;
     }
 
-    if (typeof window === "undefined") {
-      return null;
-    }
-
-    return detectBrowserLocale();
+    return null;
   },
   "en",
 );
