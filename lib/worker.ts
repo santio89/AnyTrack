@@ -2,7 +2,7 @@ import cron from "node-cron";
 import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { logs, trackers } from "@/db/schema";
 import { db } from "@/lib/db";
-import { sendTrackerChangeEmail } from "@/lib/notifications";
+import { sendTrackerChangeEmail, sendTrackerFailureEmail } from "@/lib/notifications";
 import { scrapeTarget, ScrapeError } from "@/lib/scraper";
 import { parseReferenceImagePaths } from "@/lib/reference-image-paths";
 import { saveScreenshot, deleteScreenshotFile } from "@/lib/screenshots";
@@ -32,6 +32,32 @@ async function getPreviousExtractedValue(trackerId: number) {
     .limit(1);
 
   return previousLog?.extractedValue ?? null;
+}
+
+async function maybeNotifyRunFailure(
+  tracker: typeof trackers.$inferSelect,
+  errorMessage: string,
+) {
+  if (!tracker.notifyOnFailure || !tracker.notificationEmail?.trim()) {
+    return;
+  }
+
+  try {
+    await sendTrackerFailureEmail({
+      to: tracker.notificationEmail.trim(),
+      trackerDescription: tracker.targetDescription,
+      trackerUrl: tracker.url,
+      errorMessage,
+    });
+    console.log(
+      `[AnyTrack] Failure notification sent for tracker #${tracker.id} to ${tracker.notificationEmail}`,
+    );
+  } catch (error) {
+    console.error(
+      `[AnyTrack] Failed to send failure notification for tracker #${tracker.id}:`,
+      error,
+    );
+  }
 }
 
 async function maybeNotifyValueChange(
@@ -147,6 +173,8 @@ async function processTracker(
       .update(trackers)
       .set({ lastRunAt: new Date(), updatedAt: new Date() })
       .where(eq(trackers.id, tracker.id));
+
+    await maybeNotifyRunFailure(tracker, message);
 
     console.error(`[AnyTrack] Tracker #${tracker.id} failed:`, message);
   } finally {

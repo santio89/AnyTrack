@@ -4,6 +4,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
 import * as schema from "@/db/schema";
+import { baselineMigrationsFromExistingSchema } from "@/lib/db-migrations";
 
 type Db = ReturnType<typeof drizzle<typeof schema>>;
 
@@ -58,6 +59,8 @@ async function initDbInternal() {
     );
   }
 
+  const sqlClient = getSql();
+  await baselineMigrationsFromExistingSchema(sqlClient, migrationsFolder);
   await migrate(getDb(), { migrationsFolder });
 }
 

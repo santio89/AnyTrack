@@ -11,6 +11,7 @@ type StoredGuestTracker = {
   frequencyMinutes: number;
   sortOrder: number;
   notifyOnChange: boolean;
+  notifyOnFailure?: boolean;
   notificationEmail: string | null;
   isActive: boolean;
   lastRunAt: string | null;
@@ -72,6 +73,7 @@ function toTrackerRecord(tracker: StoredGuestTracker): TrackerRecord {
     frequencyMinutes: tracker.frequencyMinutes,
     sortOrder: tracker.sortOrder,
     notifyOnChange: tracker.notifyOnChange,
+    notifyOnFailure: tracker.notifyOnFailure ?? false,
     notificationEmail: tracker.notificationEmail,
     isActive: tracker.isActive,
     lastRunAt: tracker.lastRunAt ? new Date(tracker.lastRunAt) : null,
@@ -135,6 +137,7 @@ export function createGuestTracker(input: {
   targetDescription: string;
   frequencyMinutes: number;
   notifyOnChange: boolean;
+  notifyOnFailure?: boolean;
   notificationEmail: string | null;
   referenceImage: ReferenceImageValue | null;
 }): TrackerRecord {
@@ -148,6 +151,7 @@ export function createGuestTracker(input: {
     frequencyMinutes: input.frequencyMinutes,
     sortOrder: 0,
     notifyOnChange: input.notifyOnChange,
+    notifyOnFailure: input.notifyOnFailure ?? false,
     notificationEmail: input.notificationEmail,
     isActive: true,
     lastRunAt: null,
@@ -172,6 +176,7 @@ export function updateGuestTracker(
     targetDescription: string;
     frequencyMinutes: number;
     notifyOnChange: boolean;
+    notifyOnFailure: boolean;
     notificationEmail: string | null;
     isActive: boolean;
     referenceImage: ReferenceImageValue | null;
@@ -192,6 +197,7 @@ export function updateGuestTracker(
     targetDescription: input.targetDescription?.trim() ?? current.targetDescription,
     frequencyMinutes: input.frequencyMinutes ?? current.frequencyMinutes,
     notifyOnChange: input.notifyOnChange ?? current.notifyOnChange,
+    notifyOnFailure: input.notifyOnFailure ?? current.notifyOnFailure ?? false,
     notificationEmail:
       input.notificationEmail !== undefined
         ? input.notificationEmail
@@ -325,6 +331,7 @@ export function exportGuestTrackersForSync() {
     targetDescription: tracker.targetDescription,
     frequencyMinutes: tracker.frequencyMinutes,
     notifyOnChange: tracker.notifyOnChange,
+    notifyOnFailure: tracker.notifyOnFailure ?? false,
     notificationEmail: tracker.notificationEmail,
     isActive: tracker.isActive,
     sortOrder: tracker.sortOrder,

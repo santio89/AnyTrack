@@ -17,6 +17,7 @@ export type TrackerRecord = {
   frequencyMinutes: number;
   sortOrder: number;
   notifyOnChange: boolean;
+  notifyOnFailure: boolean;
   notificationEmail: string | null;
   isActive: boolean;
   lastRunAt: Date | null;
@@ -45,6 +46,7 @@ export type GuestTrackerPayload = {
   targetDescription: string;
   frequencyMinutes: number;
   notifyOnChange: boolean;
+  notifyOnFailure: boolean;
   notificationEmail: string | null;
   isActive: boolean;
   sortOrder: number;

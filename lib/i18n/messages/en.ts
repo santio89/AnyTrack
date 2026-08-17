@@ -176,8 +176,11 @@ export const en = {
     },
     notifications: {
       emailOnChange: "Email me when the value changes",
-      emailConfigured:
-        "Uses Resend. The first successful run sets the baseline.",
+      emailOnChangeHint:
+        "The first successful run sets the baseline for change alerts.",
+      emailOnFailure: "Email me when a run fails",
+      emailOnFailureHint:
+        "Get notified when a scheduled or manual extraction errors out.",
       emailNotConfigured:
         "Resend is not configured. Set RESEND_API_KEY and NOTIFICATION_FROM_EMAIL to enable alerts.",
       notificationEmail: "Notification email",

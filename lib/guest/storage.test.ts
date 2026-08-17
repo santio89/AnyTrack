@@ -46,6 +46,7 @@ describe("guest storage", () => {
       targetDescription: "Example",
       frequencyMinutes: 60,
       notifyOnChange: false,
+      notifyOnFailure: false,
       notificationEmail: null,
       referenceImage: null,
     });
@@ -62,6 +63,7 @@ describe("guest storage", () => {
       targetDescription: "Example",
       frequencyMinutes: 60,
       notifyOnChange: false,
+      notifyOnFailure: false,
       notificationEmail: null,
       referenceImage: null,
     });

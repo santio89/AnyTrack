@@ -227,6 +227,7 @@ export function useAnyTrack(logTrackerFilter: string) {
       targetDescription: string;
       frequencyMinutes: number;
       notifyOnChange: boolean;
+      notifyOnFailure: boolean;
       notificationEmail: string;
       referenceImage: ReferenceImageValue | null;
     }) => {
@@ -236,6 +237,7 @@ export function useAnyTrack(logTrackerFilter: string) {
           targetDescription: input.targetDescription,
           frequencyMinutes: input.frequencyMinutes,
           notifyOnChange: false,
+          notifyOnFailure: false,
           notificationEmail: null,
           referenceImage: input.referenceImage,
         });
@@ -251,7 +253,11 @@ export function useAnyTrack(logTrackerFilter: string) {
           targetDescription: input.targetDescription,
           frequencyMinutes: input.frequencyMinutes,
           notifyOnChange: input.notifyOnChange,
-          notificationEmail: input.notifyOnChange ? input.notificationEmail : undefined,
+          notifyOnFailure: input.notifyOnFailure,
+          notificationEmail:
+            input.notifyOnChange || input.notifyOnFailure
+              ? input.notificationEmail
+              : undefined,
           referenceImage: input.referenceImage ?? undefined,
         }),
       });
@@ -278,6 +284,7 @@ export function useAnyTrack(logTrackerFilter: string) {
         targetDescription: string;
         frequencyMinutes: number;
         notifyOnChange: boolean;
+        notifyOnFailure: boolean;
         notificationEmail: string;
         referenceImage: ReferenceImageValue | null;
         removeReferenceImage: boolean;
@@ -303,7 +310,11 @@ export function useAnyTrack(logTrackerFilter: string) {
           targetDescription: input.targetDescription,
           frequencyMinutes: input.frequencyMinutes,
           notifyOnChange: input.notifyOnChange,
-          notificationEmail: input.notifyOnChange ? input.notificationEmail : null,
+          notifyOnFailure: input.notifyOnFailure,
+          notificationEmail:
+            input.notifyOnChange || input.notifyOnFailure
+              ? input.notificationEmail
+              : null,
           referenceImage: input.referenceImage ?? undefined,
           removeReferenceImage:
             input.removeReferenceImage && !input.referenceImage ? true : undefined,

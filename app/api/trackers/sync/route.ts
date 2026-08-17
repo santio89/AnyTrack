@@ -16,6 +16,7 @@ type SyncTrackerInput = {
   targetDescription: string;
   frequencyMinutes: number;
   notifyOnChange: boolean;
+  notifyOnFailure: boolean;
   notificationEmail: string | null;
   isActive: boolean;
   sortOrder: number;
@@ -74,6 +75,7 @@ export async function POST(request: Request) {
           frequencyMinutes: item.frequencyMinutes ?? 60,
           sortOrder: item.sortOrder ?? index,
           notifyOnChange: item.notifyOnChange,
+          notifyOnFailure: item.notifyOnFailure ?? false,
           notificationEmail: item.notificationEmail,
           isActive: item.isActive,
           createdAt: now,

@@ -179,8 +179,11 @@ export const es = {
     },
     notifications: {
       emailOnChange: "Enviarme un email cuando cambie el valor",
-      emailConfigured:
-        "Usa Resend. La primera ejecución exitosa establece la línea base.",
+      emailOnChangeHint:
+        "La primera ejecución exitosa establece la línea base para alertas de cambio.",
+      emailOnFailure: "Enviarme un email cuando falle una ejecución",
+      emailOnFailureHint:
+        "Recibe una alerta cuando una extracción programada o manual termina con error.",
       emailNotConfigured:
         "Resend no está configurado. Define RESEND_API_KEY y NOTIFICATION_FROM_EMAIL para habilitar alertas.",
       notificationEmail: "Email de notificación",

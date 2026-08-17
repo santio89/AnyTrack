@@ -34,6 +34,7 @@ export const trackers = pgTable("trackers", {
   frequencyMinutes: integer("frequency_minutes").notNull().default(60),
   sortOrder: integer("sort_order").notNull().default(0),
   notifyOnChange: boolean("notify_on_change").notNull().default(false),
+  notifyOnFailure: boolean("notify_on_failure").notNull().default(false),
   notificationEmail: text("notification_email"),
   isActive: boolean("is_active").notNull().default(true),
   lastRunAt: timestamp("last_run_at", { mode: "date" }),

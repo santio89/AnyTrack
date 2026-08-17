@@ -186,6 +186,7 @@ export function Dashboard() {
   const [targetDescription, setTargetDescription] = useState("");
   const [frequencyMinutes, setFrequencyMinutes] = useState("60");
   const [notifyOnChange, setNotifyOnChange] = useState(false);
+  const [notifyOnFailure, setNotifyOnFailure] = useState(false);
   const [notificationEmail, setNotificationEmail] = useState("");
   const [referenceImage, setReferenceImage] = useState<ReferenceImageValue | null>(
     null,
@@ -202,6 +203,7 @@ export function Dashboard() {
   const [editTargetDescription, setEditTargetDescription] = useState("");
   const [editFrequencyMinutes, setEditFrequencyMinutes] = useState("60");
   const [editNotifyOnChange, setEditNotifyOnChange] = useState(false);
+  const [editNotifyOnFailure, setEditNotifyOnFailure] = useState(false);
   const [editNotificationEmail, setEditNotificationEmail] = useState("");
   const [editReferenceImage, setEditReferenceImage] =
     useState<ReferenceImageValue | null>(null);
@@ -220,6 +222,7 @@ export function Dashboard() {
         targetDescription,
         frequencyMinutes: Number(frequencyMinutes),
         notifyOnChange,
+        notifyOnFailure,
         notificationEmail,
         referenceImage,
       });
@@ -229,6 +232,7 @@ export function Dashboard() {
         setTargetDescription("");
         setFrequencyMinutes("60");
         setNotifyOnChange(false);
+        setNotifyOnFailure(false);
         setNotificationEmail("");
         setReferenceImage(null);
         setTargetSuggestions([]);
@@ -341,6 +345,7 @@ export function Dashboard() {
     setEditTargetDescription(tracker.targetDescription);
     setEditFrequencyMinutes(String(tracker.frequencyMinutes));
     setEditNotifyOnChange(tracker.notifyOnChange);
+    setEditNotifyOnFailure(tracker.notifyOnFailure);
     setEditNotificationEmail(tracker.notificationEmail ?? "");
     setEditReferenceImage(null);
     setRemoveEditReference(false);
@@ -366,6 +371,7 @@ export function Dashboard() {
         targetDescription: editTargetDescription,
         frequencyMinutes: Number(editFrequencyMinutes),
         notifyOnChange: editNotifyOnChange,
+        notifyOnFailure: editNotifyOnFailure,
         notificationEmail: editNotificationEmail,
         referenceImage: editReferenceImage,
         removeReferenceImage: removeEditReference,
@@ -703,12 +709,27 @@ export function Dashboard() {
                           <span className="font-medium">{t("dashboard.notifications.emailOnChange")}</span>
                           <span className="mt-1 block text-muted-foreground">
                             {emailConfigured
-                              ? t("dashboard.notifications.emailConfigured")
+                              ? t("dashboard.notifications.emailOnChangeHint")
                               : t("dashboard.notifications.emailNotConfigured")}
                           </span>
                         </span>
                       </label>
-                      {notifyOnChange && (
+                      <label className="flex items-start gap-3 text-sm">
+                        <input
+                          type="checkbox"
+                          className="mt-1 h-4 w-4 rounded border-border"
+                          checked={notifyOnFailure}
+                          disabled={!emailConfigured}
+                          onChange={(event) => setNotifyOnFailure(event.target.checked)}
+                        />
+                        <span>
+                          <span className="font-medium">{t("dashboard.notifications.emailOnFailure")}</span>
+                          <span className="mt-1 block text-muted-foreground">
+                            {t("dashboard.notifications.emailOnFailureHint")}
+                          </span>
+                        </span>
+                      </label>
+                      {(notifyOnChange || notifyOnFailure) && (
                         <div className="grid gap-2">
                           <Label htmlFor="notification-email">{t("dashboard.notifications.notificationEmail")}</Label>
                           <Input
@@ -1093,13 +1114,28 @@ export function Dashboard() {
                     <span>
                       <span className="font-medium">{t("dashboard.notifications.emailOnChange")}</span>
                       <span className="mt-1 block text-muted-foreground">
-                            {emailConfigured
-                              ? t("dashboard.notifications.emailConfigured")
-                              : t("dashboard.notifications.emailNotConfigured")}
+                        {emailConfigured
+                          ? t("dashboard.notifications.emailOnChangeHint")
+                          : t("dashboard.notifications.emailNotConfigured")}
                       </span>
                     </span>
                   </label>
-                  {editNotifyOnChange && (
+                  <label className="flex items-start gap-3 text-sm">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-4 w-4 rounded border-border"
+                      checked={editNotifyOnFailure}
+                      disabled={!emailConfigured}
+                      onChange={(event) => setEditNotifyOnFailure(event.target.checked)}
+                    />
+                    <span>
+                      <span className="font-medium">{t("dashboard.notifications.emailOnFailure")}</span>
+                      <span className="mt-1 block text-muted-foreground">
+                        {t("dashboard.notifications.emailOnFailureHint")}
+                      </span>
+                    </span>
+                  </label>
+                  {(editNotifyOnChange || editNotifyOnFailure) && (
                     <div className="grid gap-2">
                       <Label htmlFor="edit-notification-email">{t("dashboard.notifications.notificationEmail")}</Label>
                       <Input

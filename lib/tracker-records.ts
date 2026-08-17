@@ -14,6 +14,7 @@ export function dbTrackerToRecord(tracker: Tracker): TrackerRecord {
     frequencyMinutes: tracker.frequencyMinutes,
     sortOrder: tracker.sortOrder,
     notifyOnChange: tracker.notifyOnChange,
+    notifyOnFailure: tracker.notifyOnFailure,
     notificationEmail: tracker.notificationEmail,
     isActive: tracker.isActive,
     lastRunAt: tracker.lastRunAt,
@@ -27,6 +28,7 @@ export function normalizeCloudTrackers(trackers: Tracker[]): TrackerRecord[] {
     ...dbTrackerToRecord(tracker),
     isActive: Boolean(tracker.isActive),
     notifyOnChange: Boolean(tracker.notifyOnChange),
+    notifyOnFailure: Boolean(tracker.notifyOnFailure),
     createdAt: new Date(tracker.createdAt),
     updatedAt: new Date(tracker.updatedAt),
     lastRunAt: tracker.lastRunAt ? new Date(tracker.lastRunAt) : null,
@@ -83,6 +85,7 @@ export function trackersEqual(a: TrackerRecord[], b: TrackerRecord[]) {
       tracker.frequencyMinutes === other.frequencyMinutes &&
       tracker.sortOrder === other.sortOrder &&
       tracker.notifyOnChange === other.notifyOnChange &&
+      tracker.notifyOnFailure === other.notifyOnFailure &&
       tracker.notificationEmail === other.notificationEmail &&
       tracker.referenceImagePath === other.referenceImagePath &&
       tracker.referenceImagePaths === other.referenceImagePaths &&

@@ -45,6 +45,7 @@ export async function POST(request: Request) {
       frequencyMinutes?: number;
       isActive?: boolean;
       notifyOnChange?: boolean;
+      notifyOnFailure?: boolean;
       notificationEmail?: string;
       referenceImage?: {
         data: string;
@@ -67,8 +68,9 @@ export async function POST(request: Request) {
 
     const notificationEmail = body.notificationEmail?.trim() || null;
     const notifyOnChange = body.notifyOnChange === true && Boolean(notificationEmail);
+    const notifyOnFailure = body.notifyOnFailure === true && Boolean(notificationEmail);
 
-    if (body.notifyOnChange && !notificationEmail) {
+    if ((body.notifyOnChange || body.notifyOnFailure) && !notificationEmail) {
       return NextResponse.json(
         { error: "Notification email is required when alerts are enabled" },
         { status: 400 },
@@ -91,6 +93,7 @@ export async function POST(request: Request) {
         frequencyMinutes: body.frequencyMinutes ?? 60,
         sortOrder: 0,
         notifyOnChange,
+        notifyOnFailure,
         notificationEmail,
         isActive: body.isActive ?? true,
         createdAt: now,

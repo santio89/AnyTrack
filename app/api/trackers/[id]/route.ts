@@ -68,6 +68,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       frequencyMinutes?: number;
       isActive?: boolean;
       notifyOnChange?: boolean;
+      notifyOnFailure?: boolean;
       notificationEmail?: string | null;
       referenceImage?: {
         data: string;
@@ -86,7 +87,12 @@ export async function PATCH(request: Request, context: RouteContext) {
         ? body.notifyOnChange === true && Boolean(nextNotificationEmail)
         : existing.notifyOnChange;
 
-    if (body.notifyOnChange && !nextNotificationEmail) {
+    const nextNotifyOnFailure =
+      body.notifyOnFailure !== undefined
+        ? body.notifyOnFailure === true && Boolean(nextNotificationEmail)
+        : existing.notifyOnFailure;
+
+    if ((body.notifyOnChange || body.notifyOnFailure) && !nextNotificationEmail) {
       return NextResponse.json(
         { error: "Notification email is required when alerts are enabled" },
         { status: 400 },
@@ -131,6 +137,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         frequencyMinutes: body.frequencyMinutes ?? existing.frequencyMinutes,
         isActive: body.isActive ?? existing.isActive,
         notifyOnChange: nextNotifyOnChange,
+        notifyOnFailure: nextNotifyOnFailure,
         notificationEmail: nextNotificationEmail,
         referenceImagePath,
         referenceImagePaths: null,
