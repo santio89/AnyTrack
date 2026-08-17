@@ -59,6 +59,8 @@ async function getBrowser(headed = false): Promise<Browser> {
       "--no-sandbox",
       "--disable-setuid-sandbox",
       "--disable-blink-features=AutomationControlled",
+      "--disable-font-subpixel-positioning",
+      "--font-render-hinting=none",
     ],
   };
 
@@ -110,6 +112,7 @@ async function captureVisionScreenshot(
       fullPage: false,
       type: "jpeg",
       quality,
+      timeout: 60_000,
     });
 
     if (screenshot.length <= maxBytes) {
@@ -121,6 +124,7 @@ async function captureVisionScreenshot(
     fullPage: false,
     type: "jpeg",
     quality: 35,
+    timeout: 60_000,
   });
 }
 
