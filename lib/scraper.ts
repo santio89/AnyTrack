@@ -279,15 +279,10 @@ async function scrapeOnceInner(
 
   await context.addInitScript(() => {
     Object.defineProperty(navigator, "webdriver", { get: () => undefined });
-
-    Object.defineProperty(navigator, "plugins", {
-      get: () => [1, 2, 3, 4, 5],
-    });
-
+    Object.defineProperty(navigator, "plugins", { get: () => [1, 2, 3, 4, 5] });
     Object.defineProperty(navigator, "languages", {
       get: () => ["es-AR", "es", "en-US", "en"],
     });
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).chrome = { runtime: {} };
   });
